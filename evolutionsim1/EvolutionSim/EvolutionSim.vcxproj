@@ -26,6 +26,7 @@
     <ClCompile Include="DebugDraw.cpp" />
     <ClCompile Include="GeneticAlgorithm.cpp" />
     <ClCompile Include="gl.cpp" />
+    <ClCompile Include="Graphs.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PrimitiveRenderer.cpp" />
     <ClCompile Include="Render.cpp" />
@@ -42,6 +43,7 @@
     <ClInclude Include="deleters.h" />
     <ClInclude Include="GeneticAlgorithm.h" />
     <ClInclude Include="gl.h" />
+    <ClInclude Include="Graphs.h" />
     <ClInclude Include="PrimitiveRenderer.h" />
     <ClInclude Include="Render.h" />
     <ClInclude Include="Terrain.h" />

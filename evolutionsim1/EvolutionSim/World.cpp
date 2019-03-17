@@ -1,25 +1,36 @@
 #pragma once
 #include "World.h"
+#include "Terrain.h"
+#include "GeneticAlgorithm.h"
 
 #include <iostream>
+#include <stdlib.h>
 #include <Box2D/Box2D.h>
+
+#include <math.h>
 
 constexpr char const* const pPositionAttribName = "position";
 constexpr char const* const pColourAttribName = "colour";
 
 const int GRAVITY = -9.81;
 
+std::default_random_engine generator;
+int fertileSize = (int)NUM_AGENT_POP * 0.5;	// calculate and cast fertileSize to int
+std::discrete_distribution<int> CullDistribution{ 0,1,2,2,3,3,4,4,5,5 };
+std::discrete_distribution<int> MateSelectionDistrobution{ 4,4,4,3,3,3,3,2,1,1 };
+
 // create initialisation lists
 
-World::World(odingine::Window* window) : m_mvpAttribLoc(0), m_pMvpMatStart(0)
+
+
+World::World(odingine::Window* window)  
 {
 	m_b2world = nullptr;
 
 	m_window = window;
-		// INIT SHADERS
+	// INIT SHADERS
 	initShaders();
 	initWorld();
-	//sortAgentParts();
 }
 
 void World::initWorld()
@@ -27,209 +38,68 @@ void World::initWorld()
 	// Set up scene for rendering.
 	glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
 
-	// Init Renderer
-	
-	// DEBUG DRAW DOES NOT CONTAIN VERTICES IF INITIALISED LIKE THIS
-	// 
-	//b2draw::DebugDraw test{ glGetAttribLocation(m_colorProgram.getProgramID(), pPositionAttribName),
-	//							glGetAttribLocation(m_colorProgram.getProgramID(), pColourAttribName), 16, 0.f };
-
 	m_debugDraw = new b2draw::DebugDraw(glGetAttribLocation(m_colorProgram.getProgramID(), pPositionAttribName),
 		glGetAttribLocation(m_colorProgram.getProgramID(), pColourAttribName), 16, 0.f);
 
-
-
-	//b2draw::DebugDraw m_debugDraw{glGetAttribLocation(m_colorProgram.getProgramID(), pPositionAttribName),
-	//						   	glGetAttribLocation(m_colorProgram.getProgramID(), pColourAttribName), 16, 0.f};
-
-
-	
-	//m_debugDraw = &test;
-
-	m_debugDraw->SetFlags(0xff);
+	uint32 flags = 0;
+	flags += b2Draw::e_shapeBit;
+	flags += b2Draw::e_jointBit;
+	//flags += b2Draw::e_aabbBit;
+	flags += b2Draw::e_centerOfMassBit;
+	m_debugDraw->SetFlags(flags);
 	std::cout << m_debugDraw->GetFlags() << " - flags" << std::endl;
 
 	createWorld();
 
 	initCamera();
 
-	// create agents
-	//createAgents();
-	spawnAgent(7, 7);
+	createTerrain();
+
+	//randomMethod();
+
+	createAgents();
 
 
-	//createAgentsTwo(); // UNCOMMENT
-	//createAgentsTwo();
-
-
-	//m_b2world->SetDebugDraw(m_renderer);
-	//m_renderer->SetFlags(b2Draw::e_shapeBit + b2Draw::e_jointBit); // can't set flags for some reason
 }
 
-void World::createAgentsTwo() 
-{
-	b2Filter collideEverything;
-	collideEverything.categoryBits = 0x0001;
-	collideEverything.maskBits = 0xffff;
-	collideEverything.groupIndex = 1;
-
-	b2FixtureDef fixtureDef;
-	fixtureDef.density = 1.0f;
-	//fixtureDef.density = 1.0f;
-	fixtureDef.friction = 0.3f;
-	fixtureDef.filter = collideEverything;
-
+void World::randomMethod() {	// method to test distrobution of random variables
 	
-		b2BodyDef bodyDef1;
-		bodyDef1.type = b2_staticBody;
-		bodyDef1.position.Set(0.0f, -4.0f);
-		auto const pGroundBody = m_b2world->CreateBody(&bodyDef1);
+	int distrobution[10];
 
-		b2PolygonShape box;
-		box.SetAsBox(-30.0f, 1.0f);
+	for (int i = 0; i < 10; i++) {
+		distrobution[i] = 0;
+	}
 
-		fixtureDef.shape = &box;
-		pGroundBody->CreateFixture(&fixtureDef);
-	
+	int rand;
+	for (int i = 0; i < 50; i++) {
+		rand = MateSelectionDistrobution(generator);
+		distrobution[rand] += 1;
+	}
 
-	
-		b2BodyDef bodyDef2;
-		bodyDef2.type = b2_dynamicBody;
-		bodyDef2.position.Set(0.0f, 4.0f);
+	for (int i = 0; i < 10; i++) {
+		std::cout << i << ": " << distrobution[i] << std::endl;
+	} 
 
-		// DEBUG DOESN'T STEP INTO CreateBody() may reason things are being printed because not configured?
-		// 
-
-		auto const pDynamicBody = m_b2world->CreateBody(&bodyDef2);
-
-		b2PolygonShape box2;
-		box2.SetAsBox(1.0f, 1.0f);
-
-		fixtureDef.shape = &box2;
-		pDynamicBody->CreateFixture(&fixtureDef);
-	
-
-	
-		b2BodyDef bodyDef3;
-		bodyDef3.type = b2_dynamicBody;
-		bodyDef3.position.Set(-7.0f, 8.0f);
-		bodyDef3.linearVelocity.Set(1.0f, 0.0f);
-		bodyDef3.angularVelocity = 1.5f;
-		auto const pBody = m_b2world->CreateBody(&bodyDef3);
-
-		b2CircleShape circle;
-		circle.m_p = { 0.0f, 0.0f };
-		circle.m_radius = 2.0f;
-
-		fixtureDef.shape = &circle;
-		pBody->CreateFixture(&fixtureDef);
-	
 }
 
 void World::initCamera()
-{
-	
+{	
 	// Init camera
 	m_camera.init(m_screenWidth, m_screenHeight);
-	m_camera.setScale(10.0f);
+	m_camera.setScale(7.0f);
 	// test for camera
 	m_camera.setPosition(glm::vec2(0, 0));
+	m_camera.update();
 	
-	/*
-	constexpr float fieldOfView{ 45.0f };
-	auto const projMat = glm::perspective(
-		fieldOfView,
-		4.0f / 3.0f,
-		0.1f,
-		100.0f
-	);
-
-	const glm::vec3 eye{ 0.0f, 0.0f, 40.0f };	// may need to change back to constexpr
-	const glm::vec3 focus{ 0.0f, 0.0f, 0.0f };
-	const glm::vec3 up{ 0.0f, 1.0f, 0.0f };
-	auto const viewMat = glm::lookAt(eye, focus, up);
-
-	glm::mat4 const modelMat{ 1.0f };
-
-	auto mvpMat{ projMat * viewMat * modelMat };
-	auto pMvpMatStart{ &mvpMat[0][0] };
-	m_pMvpMatStart = pMvpMatStart;				// something wrong round here?
-
-	auto mvpAttribLoc{ glGetUniformLocation(m_colorProgram.getProgramID(), "MVP") };
-	m_mvpAttribLoc = mvpAttribLoc;
-
-	if (m_mvpAttribLoc < 0)
-	{
-		throw std::runtime_error{ "Unable to locate uniform 'MVP'" };
-	}
-
-	std::cout << m_pMvpMatStart << std::endl;
-	std::cout << m_mvpAttribLoc << std::endl;
-	*/
 }
 
 void World::createWorld() {
-
-
-
 	// Create the world
 	b2Vec2 const gravity(0.0f, GRAVITY);
 	m_b2world = new b2World(gravity);
 
-	b2BodyDef groundBodyDef;
-	groundBodyDef.position.Set(0.0f, -20.0f);
-
-	b2Body* groundBody = m_b2world->CreateBody(&groundBodyDef);
-
-	b2PolygonShape groundBox;
-	groundBox.SetAsBox(150.0f, 2.0f);
-
-	groundBody->CreateFixture(&groundBox, 0.0f);
-
-	/*
-	b2Filter collideEverything;
-	collideEverything.categoryBits = 0x0001;
-	collideEverything.maskBits = 0xffff;
-	collideEverything.groupIndex = 1;
-
-	b2FixtureDef fixtureDef;
-	fixtureDef.density = 1.0f;
-	//fixtureDef.density = 1.0f;
-	fixtureDef.friction = 0.3f;
-	fixtureDef.filter = collideEverything;
-	*/
-
-
-
-
-	// Set up debug draw
 	m_b2world->SetDebugDraw(m_debugDraw);	// init debugdraw
 
-	//m_b2world->SetContinuousPhysics(true);
-	//m_b2world->SetAutoClearForces(true);
-	/*
-	b2Filter collideEverything;
-	collideEverything.categoryBits = 0x0001;
-	collideEverything.maskBits = 0xffff;
-	collideEverything.groupIndex = 1;
-
-	b2FixtureDef fixtureDef;
-	fixtureDef.density = 1.0f;
-	fixtureDef.density = 1.0f;
-	fixtureDef.friction = 0.3f;
-	fixtureDef.filter = collideEverything;
-
-	b2BodyDef bodyDef;
-	bodyDef.type = b2_staticBody;
-	bodyDef.position.Set(0.0f, -4.0f);
-	auto const pGroundBody = m_b2world->CreateBody(&bodyDef);
-
-	b2PolygonShape box;
-	box.SetAsBox(-30.0f, 1.0f);
-
-	fixtureDef.shape = &box;
-	pGroundBody->CreateFixture(&fixtureDef);
-	*/
 }
 
 void World::createAgents()
@@ -237,31 +107,18 @@ void World::createAgents()
 	int x = 0;
 	int y = 0;
 
-	for (int i = 0; i < 1; i++) {
-
-		// generate Genetic material for agent
-		m_GA = new GeneticAlgorithm();
-		m_GA->generateChromosomes();
-
-		// generate agents
-		agent = new Agent(m_GA, m_b2world, x, y);
-		// m_agents.emplace_back(m_b2world); // here is the error
-		m_agents.emplace_back(agent);
+	for (int i = 0; i < NUM_AGENT_POP; i++) {
+		spawnAgent(++m_agentCount, 0, 0);
 	}
 }
 
-void World::updateWorld()
-{
-	//m_camera.update();	// maybe remove
-
-	//check input here
-
-
-	// Update the physics simulation
-	//m_b2world->Step(1.0f / 60.0f, 6, 2);
-	//m_b2world->DrawDebugData();
-
+void World::createTerrain() {
+	m_terrain = new Terrain(m_b2world);
+	//m_terrain->CreateHillTerrain();
+	m_terrain->CreateRoughTerrain();
+	//m_terrain->CreateFlatTerrain();
 }
+
 
 void World::setCameraPosition(glm::vec2 position)
 {
@@ -272,9 +129,6 @@ void World::setCameraPosition(glm::vec2 position)
 void World::initShaders() {
 	// Compile our color shader
 	m_colorProgram.compileShaders("Shaders/vertexShader.vs", "Shaders/fragmentShader.fs");
-	//m_colorProgram.addAttribute(pPositionAttribName);
-	//m_colorProgram.addAttribute(pColourAttribName);
-	//m_colorProgram.addAttribute("vertexUV");
 	m_colorProgram.linkShaders();
 }
 
@@ -294,57 +148,28 @@ void logBodies(b2World const* pWorld)
 	}
 }
 
-void World::compute()
+void World::FollowBestAgent()
 {
-	//b2draw::DebugDraw m_debugDraw
-	//b2draw::DebugDraw debug{glGetAttribLocation(m_colorProgram.getProgramID(), pPositionAttribName),
-	//	glGetAttribLocation(m_colorProgram.getProgramID(), pColourAttribName), 16, 0.f };
-	//debug = m_debugDraw
-	//b2draw::DebugDraw debugDraw{ glGetAttribLocation(m_colorProgram.getProgramID(), pPositionAttribName),
-	//	glGetAttribLocation(m_colorProgram.getProgramID(), pColourAttribName), 16, 0.f };
-	
+	// follow agent best agent
+	if (m_agents.size() > 0) {
 
-	/*
-	b2World* b2world;
-	b2world = m_b2world;
+		int bestAgentScore = 0;
+		int bestAgentID = 0;
+		for (int i = 0; i < m_agents.size(); i++) {
+			int score = m_agents[i]->getPosition().x;
+			if (score > bestAgentScore) {
+				bestAgentID = i;
+				bestAgentScore = score;
+			}
 
-	auto const update = [&debugDraw, &b2world] {
-		b2world->Step(1.0f / 60.0f, 6, 2);
-		b2world->ClearForces();
-		debugDraw.Clear();
-		//m_debugDraw.SetFlags(m_debugDraw.e_shapeBit | m_debugDraw.e_jointBit);
+		}
 
-		// follow agent
-		//int x = m_agents[0]->getPosition().x;
-		//int y = m_agents[0]->getPosition().y;
-		//m_camera.setPosition(glm::vec2(x, y));
+		int x = m_agents[bestAgentID]->getPosition().x;
+		int y = m_agents[bestAgentID]->getPosition().y;
 
-		b2world->DrawDebugData();	//
-		debugDraw.BufferData();
-		logBodies(b2world);
-	};
-
-	GLuint programID;
-	programID = m_colorProgram.getProgramID();
-
-
-	SDL_Window* pSDLWindow = m_window->getPWindow();
-	
-
-	auto const render = [&debugDraw, programID, pSDLWindow] {
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glUseProgram(programID);
-		//glUniformMatrix4fv(mvpAttribLoc, 1, GL_FALSE, pMvpMatStart);
-		debugDraw.Render();
-		SDL_GL_SwapWindow(pSDLWindow);
-	};
-	
-	while (1 == 1) {
-		update();
-		render();
+		m_camera.setPosition(glm::vec2(x, y));
+		m_camera.update();
 	}
-	*/
-
 }
 
 void World::update()
@@ -353,21 +178,13 @@ void World::update()
 	m_b2world->Step(1.0f / 60.0f, 6, 2);
 	m_b2world->ClearForces();
 	m_debugDraw->Clear();
-	//m_debugDraw.SetFlags(m_debugDraw.e_shapeBit | m_debugDraw.e_jointBit);
 
-	// follow agent
-	int x = m_agents[0]->getPosition().x;
-	int y = m_agents[0]->getPosition().y;
-	m_camera.setPosition(glm::vec2(x, y));
-	m_camera.update();
+	FollowBestAgent();
 
-	// CAN NOT RETRIEVE FLAG SET FOR DebugDraw
+
 	m_b2world->DrawDebugData();	//
 
-
-	// DATA NOT BEING SENT TO BUFFE???
-
-	m_debugDraw->BufferData();	// data is not being buffered????!!
+	m_debugDraw->BufferData();	// 
 	//logBodies(m_b2world);
 }
 
@@ -391,55 +208,330 @@ void World::render()
 	m_colorProgram.unuse();
 
 	m_window->swapBuffer();
-
-	//SDL_GL_SwapWindow(m_window->getPWindow());
 }
 
-void World::drawGame() {		// NOT USED
-}
 
-void World::spawnAgent(int x, int y) 
+void World::spawnAgent(int ID, int x, int y) 
 { 
-	if (m_agents.size() > 0) {
-		for (int i = 0; i < m_agents.size(); i++) {
-			//m_b2world->GetBodyList().
-		}
-	}
-	//m_clickX = x; 
-	//m_clickY = y; 
-	std::cout << "NEW AGENT" << std::endl;
+	//std::cout << "NEW AGENT" << std::endl;
 	// generate Genetic material for agent
-	m_GA = new GeneticAlgorithm();
+	GeneticAlgorithm* m_GA = new GeneticAlgorithm();
 	m_GA->generateChromosomes();
 
+	//std::cout << "...... \n ....... \n ...... \n" << std::endl;
+	//m_GA->outputAgentChromes();
+	//m_GA->FlattenChrome();
+
 	// generate agents
-	agent = new Agent(m_GA, m_b2world, x, y);
-	//agent->setPosition(m_clickX, m_clickY);
-	// m_agents.emplace_back(m_b2world); // here is the error
+	Agent* agent = new Agent(m_GA, m_b2world, ID, x, y);
+	m_agents.emplace_back(agent);
+
+	// may only need to keep GA to recreated agent	
+}
+
+void World::spawnAgent(GeneticAlgorithm* GA, int ID, int x, int y)	// spawn agent with GA chromes
+{
+	// generate agents given existing Genetic code
+	Agent* agent = new Agent(GA, m_b2world, ID, x, y);
 	m_agents.emplace_back(agent);
 }
 
-
-void World::sortAgentParts()
+void World::clearAgents() 
 {
-	for (int i = 0; i < m_agents.size(); i++) {
+	//for (int i = 0; i < m_agents.size(); i++) {
+	//	m_b2world->DestroyBody(m_agents[i]->getAgentBody());
+	//}
 
-		std::cout << "agent fixture list: " << m_agents[i]->getAgentBody()->GetFixtureList() << std::endl;
+	//m_b2world->DestroyBody(m_b2world->GetBodyList());
 
-		std::cout << "agent position: " << m_agents[i]->getAgentBody()->GetPosition().x << ", " << m_agents[i]->getAgentBody()->GetPosition().y << std::endl;
-
-		std::vector<b2Body*> parts;
-		parts = m_agents[i]->getAgentParts();
-
-		for (int j = 0; j < parts.size(); j++) {
-			std::cout << "type: " << parts[j] << std::endl;
+	//std::cout << "body list: " << m_b2world->GetBodyList() << std::endl;
+	//std::cout << "body count: " << m_b2world->GetBodyCount() << std::endl;
 		
-		}
-
-		std::cout << "-------------------" << std::endl;
-
+	for (int i = 0; i < m_b2world->GetJointCount(); i++) {
+		m_b2world->DestroyJoint(m_b2world->GetJointList());
+		m_b2world->GetJointList()->GetNext();
 	}
 
+	for (int i = 0; i < m_b2world->GetBodyCount(); i++) {	// destroy all bodies in the world
+
+		for (b2Fixture* f = m_b2world->GetBodyList()->GetFixtureList(); f;) {
+			b2Fixture* ftd = f;
+			f = f->GetNext();
+			m_b2world->GetBodyList()->DestroyFixture(ftd);
+		}
+
+		m_b2world->DestroyBody(m_b2world->GetBodyList());
+		m_b2world->GetBodyList()->GetNext();
+	}
+
+
+	m_agents.clear();
+
+	//std::cout << "body list2: " << m_b2world->GetBodyList() << std::endl;
+	//std::cout << "body count2: " << m_b2world->GetBodyCount() << std::endl;
+
+	//std::cout << "start of error: " << std::endl;
+	//for (int i = 0; i < m_b2world->GetBodyCount(); i++) {
+		//std::cout << "body" << i << m_b2world->GetBodyList() << std::endl;
+		//m_b2world->GetBodyList()->GetNext();
+	//}
+
+
+
 }
+
+void World::OutputAgentChromes()
+{
+	for (int i = 0; i < m_agents.size(); i++) {
+		std::cout << "Agent " << i << std::endl;
+		m_agents[i]->getGA()->FlattenChrome();
+	}
+}
+
+void World::OutputAgentID()
+{
+	for (int i = 0; i < m_agents.size(); i++) {
+		std::cout << "Position [" << i << "] - Agent:" << m_agents[i]->getID() << " Distance x: " << m_agents[i]->getPosition().x << std::endl;
+	}
+}
+
+void World::CalculateStatistics()
+{
+	// calculate mean x distance of entire population - plot of graph
+	// calculate Q1 and Q3 of population - plot on graph
+
+	float totalDistance = 0;
+	float bestAgentDistance = 0;
+	for (int i = 0; i < m_agents.size(); i++) {
+		int distance = m_agents[i]->getPosition().x;
+		totalDistance += distance;
+		if (distance > bestAgentDistance) {
+			bestAgentDistance = distance;
+		}
+	}
+	float mean = totalDistance / NUM_AGENT_POP;
+
+
+	std::cout << "EPOCH: " << m_currentEpoch << std::endl;
+	std::cout << "BEST AGENT: " << bestAgentDistance << std::endl;
+	std::cout << "MEAN: " << mean << std::endl;
+
+	int medianIndex = (int) NUM_AGENT_POP / 2;
+	std::cout << "MEDIAN: " << m_agents[medianIndex]->getPosition().x << std::endl;
+
+}
+
+void World::incrementAgentAge()
+{
+	for (int i = 0; i < m_agents.size(); i++) {
+		m_agents[i]->incrementAge();
+	}
+}
+
+void World::sortAgents()
+{
+	// simple bubble sort to order agents based on x position
+	for (int i = 0; i < m_agents.size() - 1; i++) {
+		for (int j = 0; j < m_agents.size() - i - 1; j++) {
+			if (m_agents[j]->getPosition().x < m_agents[j + 1]->getPosition().x) {
+				//swap(m_agents[j], m_agents[j + 1]);
+				Agent* temp = m_agents[j];
+				m_agents[j] = m_agents[j + 1];
+				m_agents[j + 1] = temp;
+			}
+		}
+	}
+
+	// print sorted list
+	for (int i = 0; i < m_agents.size(); i++) {
+		//std::cout << "x pos: " << m_agents[i]->getPosition().x << std::endl;
+	}
+
+
+
+}
+
+void World::SelectFertileAgents() 
+{
+	// order agents based on x position	
+	sortAgents();
+
+	OutputAgentID();
+
+	CalculateStatistics();	// calculate statistics on population
+
+	//std::cout << "agent size before: " << m_agents.size() << std::endl;
+
+	for (int i = 0; i < m_agents.size(); i++) {	
+		m_fertileAgents[i] = m_agents[i];	// transfer agent data to array datatype
+	}
+	clearAgents();	// clear the existing agents from m_agents and m_b2world
+	clearAgents();
+	clearAgents();
+	clearAgents();
+	clearAgents();
+
+	// kill 50 agents (1/2 of agents)
+	// if agent age over x amount then destroy first
+	for (int i = 0; i < NUM_AGENT_POP; i++) {
+		if (m_fertileAgents[i]->getEpochAge() > m_maxAge) {
+			//m_agents.erase(m_agents.begin() + i);
+			m_fertileAgents[i] = NULL;
+		}
+	}
+
+	//std::cout << "new agent size cull 1: " << m_agents.size() << std::endl;
+
+	// Cull more agents at randomly until 50 reached (higher probability to remove bad agents)
+	GeneticAlgorithm* g = new GeneticAlgorithm();
+	int offset = 0;
+	int index = 0;
+	float rand = 0;
+	int numAgents = NUM_AGENT_POP;
+	while (numAgents > NUM_AGENT_POP * CULL_PERCENTAGE) {		// 100 * 0.5 = 50 (cull 50% of populations)	
+		//rand = g->generateRandomInt(0, NUM_AGENT_POP);
+		//m_agents.erase(m_agents.begin() + rand);
+
+		offset = CullDistribution(generator);
+		//std::cout << "offset: " << offset <<  " - index:" << ((offset + 1) * (NUM_AGENT_POP / 10) - g->generateRandomInt(1, NUM_AGENT_POP / 10)) << std::endl;
+		index = (offset) * (NUM_AGENT_POP / 10) + g->generateRandomInt(0, (NUM_AGENT_POP / 10) - 1);
+		if (m_fertileAgents[index] != NULL) {
+			m_fertileAgents[index] = NULL; // divide by 10 because the size of distrobution
+			//std::cout << "REMOVED " << index << std::endl;
+			numAgents--;
+		}
+		else {
+			//std::cout << index << ": " << "ALREADY NULL:" << std::endl;
+		}
+	}
+
+	//m_fertileAgents = m_agents;	// swap fertile agents to new vector
+
+	//std::cout << "new agent size cull 2: " << m_fertileAgents.size() << std::endl;
+
+	// print fertile agenst
+	//std::cout << "START OF CULLING" << std::endl;
+	int count = 0;
+	for (int i = 0; i < NUM_AGENT_POP; i++) {	// map culled agents to new array
+		//std::cout << "agent" << i << std::endl;
+		if (m_fertileAgents[i] != NULL) {
+			//std::cout << "agent " << i << ": " << m_fertileAgents[i]->getAgentBody() << std::endl;
+			m_fertileAgentsSelection[count] = m_fertileAgents[i];
+			count += 1;
+		}
+		else {
+			//std::cout << i << ": " << "NULL" << std::endl;
+		}
+	}
+	//std::cout << "END OF CULLING" << std::endl;
+
+	//for (int i = 0; i < (NUM_AGENT_POP * CULL_PERCENTAGE); i++) {	// map culled agents to new array
+	//	std::cout << "agent " << i << ": " << m_fertileAgentsSelection[i]->getAgentBody() << std::endl;
+	//}
+
+	SelectAgentPartners();
+
+}
+
+void World::SelectAgentPartners() 	// takes list of fertile agents selects pairs to breed
+{
+	// select which agents will mate with each other
+	// agents with better fittness scores will be more likely to have offspring
+
+	GeneticAlgorithm* g = new GeneticAlgorithm();
+	
+	
+	//std::cout << "SAMPLE START: " << std::endl;
+	//int sampleSize = (int) NUM_AGENT_POP * CULL_PERCENTAGE;
+	//int sampleSize = 50;
+	//for (int i = 0; i < NUM_AGENT_POP * CULL_PERCENTAGE; i++) {
+	int newAgents = 0;
+	while (newAgents < NUM_AGENT_POP * CULL_PERCENTAGE) {
+		int offset = MateSelectionDistrobution(generator);
+		int index = (offset) * ((NUM_AGENT_POP / 10) * CULL_PERCENTAGE) + g->generateRandomInt(1, (NUM_AGENT_POP / 10)  * CULL_PERCENTAGE);
+		
+		int offset2 = MateSelectionDistrobution(generator);
+		int index2 = (offset2) * ((NUM_AGENT_POP / 10) * CULL_PERCENTAGE) + g->generateRandomInt(0, (NUM_AGENT_POP / 10)  * CULL_PERCENTAGE);
+
+		//std::cout << "index1: " << index << std::endl;
+		//std::cout << "index2: " << index2 << std::endl;
+
+		if (index != index2) {
+			GeneticAlgorithm* newGenome = CrossoverAgent(m_fertileAgentsSelection[offset], m_fertileAgentsSelection[offset2]); // cross over two agents
+			spawnAgent(newGenome, ++m_agentCount, 0, 0);	// spawn the new crossover agent
+			newAgents++;
+		}
+	}
+
+	CreateSurvivingAgents();				// spawn the agents that survived
+
+	// displays all fertile agents
+	//for (int i = 0; i < (NUM_AGENT_POP * CULL_PERCENTAGE); i++) {	// map culled agents to new array
+	//	std::cout << "agent " << i << ": " << m_fertileAgentsSelection[i]->getAgentBody() << std::endl;
+	//}
+
+}
+
+void World::CreateSurvivingAgents()
+{
+	for (int i = 0; i < NUM_AGENT_POP * CULL_PERCENTAGE; i++) {
+		GeneticAlgorithm* GA = m_fertileAgentsSelection[i]->getGA();
+		spawnAgent(GA, m_fertileAgentsSelection[i]->getID(), 0, 0);
+	}
+}
+
+void World::MutateGenome()
+{
+
+}
+
+GeneticAlgorithm* World::CrossoverAgent(Agent* a1, Agent* a2)
+{
+	// takes two agents and crosses their genome
+	
+	GeneticAlgorithm* g = new GeneticAlgorithm();
+	int crossoverSize = g->generateRandomInt(1, a1->getGA()->getSymmetrySize() - 1);	// crossover size is where the crossover occurs in agent chromes
+
+	//std::cout << "split index: " << crossoverSize << std::endl;
+
+	GeneticAlgorithm* newGenome = new GeneticAlgorithm();			// create new genome
+	
+	AgentChromes agentChromes1 = a1->getGA()->getAgentChromes();	// get chromes from agent 1
+	AgentChromes agentChromes2 = a2->getGA()->getAgentChromes();	// get chromes from agent 2
+	
+	for (int i = 0; i < crossoverSize; i++) {						// add first half of agent 1 chromes to new genome
+		newGenome->addAgentChromes(agentChromes1.lines[i]);			
+	}
+
+	for (int i = a2->getGA()->getSymmetrySize(); i > crossoverSize; i--) { // add second half of agent 2 chromes to new genome
+		newGenome->addAgentChromes(agentChromes2.lines[i - 1]);
+	}
+
+	/*
+	std::cout << "GENOME CROSSOVER START" << std::endl;
+	std::cout << "chrome 1" << std::endl;
+	a1->getGA()->FlattenChrome();
+	std::cout << "chrome 2" << std::endl;
+	a2->getGA()->FlattenChrome();
+	std::cout << "new chrome" << std::endl;
+	newGenome->FlattenChrome();
+	std::cout << "GENOME CROSSOVER END" << std::endl;
+	*/
+
+	newGenome->SearchAgentChromes(); // mutate random gene with mutation given mutation rate
+
+	return newGenome;		// return new genome
+
+
+
+}
+
+void World::EvolveAgents() 
+{
+	SelectFertileAgents();
+}
+
+
+
 
 

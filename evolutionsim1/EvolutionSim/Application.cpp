@@ -47,37 +47,53 @@ void Application::initSystems() {
 void Application::initWorld()
 {
 	m_world = new World(&m_window);
+
+	//m_world->createAgents();
 }
 
 void Application::gameLoop() {
 	odingine::FpsLimiter fpsLimiter; // create fps limiter
 	fpsLimiter.setMaxFPS(60.0f);
 
+	time_t startEpochTime = time(0);
+
 	while (m_gameState == GameState::PLAY) {
-		fpsLimiter.begin();
 
-		processInput();
+		double seconds = difftime(time(0), startEpochTime);	
+		if (seconds < 60) {	
+
+			//fpsLimiter.begin();		// begin fps counter
+
+			processInput();			// process the users input
+			m_world->update();      // update Box2D world
+			m_world->render(); 		// draw world
+
+			// fpsLimiter.end();		// end fps counter
+		} else {
+			// reset world
+			std::cout << "=========" << std::endl;
+
+			// increment age of ages
+			//m_world->incrementAgentAge();
+
+			//m_world->clearAgents(); // uncomment
+
+			// Evole Agents
+			m_world->EvolveAgents();
+
+			//m_world->clearAgents(); // clear the agents from the world 
+
+			// Create new and existing Agents
+			//m_world->createAgents();	// temp function - call create NEW agents
+
+			m_world->incrementEpoch();
+
+			startEpochTime = time(0);	// reset timer
+
+		}
 
 
 
-		// SET CAMERA POSITION - use this to track agents. e.g. - the agent doing the best
-		//glm::vec2 position(10, 0); // change to moving value
-		//m_world->setCameraPosition(position);
-
-		// update Box2D world
-
-		m_world->update();
-
-		//m_world->compute();
-
-		// draw world
-		m_world->render();
-
-		fpsLimiter.end();
-
-
-		//maybe swap buffers?
-		//m_window.swapBuffer();
 	}
 
 }
@@ -112,10 +128,7 @@ void Application::processInput() {
 		case SDL_MOUSEBUTTONDOWN:
 			_inputManager.pressKey(evnt.button.button);
 			// place agent on click
-			//clickX = _inputManager.getMouseCoords().x;
-			//clickY = _inputManager.getMouseCoords().y;
-			m_world->spawnAgent(clickX, clickY);
-			std::cout << "x: " << clickX << "y: " << clickY << std::endl;
+			//m_world->spawnAgent(clickX, clickY);
 			break;
 		case SDL_MOUSEBUTTONUP:
 			_inputManager.releaseKey(evnt.button.button);

@@ -6,7 +6,7 @@
 #include <math.h>
 #include <functional>
 #include <iostream>
-
+ 
 #define M_PI acos(-1.0)
 
 static std::random_device rd; // random device engine, usually based on /dev/random on UNIX-like systems
@@ -25,13 +25,8 @@ GeneticAlgorithm::~GeneticAlgorithm()
 {
 }
 
-int GeneticAlgorithm::get_rand() {
-	return 1;
-}
-
 float GeneticAlgorithm::generateRandomFloat()
 {
-	//std::mt19937 generator{ 37 };
 	std::uniform_real_distribution<float> dfloat{ m_minFloatLimit, m_maxFloatLimit };
 	//std::cout << "RF: " << dfloat(m_RandEng) << std::endl;
 	return dfloat(m_RandEng);
@@ -39,7 +34,6 @@ float GeneticAlgorithm::generateRandomFloat()
 
 float GeneticAlgorithm::generateRandomInt()
 {
-	//std::mt19937 generator{ 37 };
 	std::uniform_int_distribution<int> dint{ m_minIntLimit, m_maxIntLimit };
 	//std::cout << "RI: " << dint(m_RandEng) << std::endl;
 	return dint(m_RandEng);
@@ -47,75 +41,104 @@ float GeneticAlgorithm::generateRandomInt()
 
 bool GeneticAlgorithm::generateRandomBool()
 {
-	//std::mt19937 generator{ 37 };
 	std::uniform_int_distribution<int> dbool{0, 1};
 	return dbool(m_RandEng);
+}
+
+float GeneticAlgorithm::generateRandomFloat(float f1, float f2)
+{
+	std::uniform_real_distribution<float> dfloat{ f1, f2 };
+	float RF = dfloat(m_RandEng);
+	return RF;
+}
+
+float GeneticAlgorithm::generateRandomInt(int i1, int i2)
+{
+	std::uniform_int_distribution<int> dint{ i1, i2 };
+	int RI = dint(m_RandEng);
+	return RI;
+}
+
+WheelChromes GeneticAlgorithm::getWheelChromes(int lineIndex, int wheelIndex)
+{ 
+	return m_agentChromes.lines[lineIndex].wheel[wheelIndex];
 }
 
 
 void GeneticAlgorithm::generateChromosomes()
 {
+	/*
 	// generate wheel chromes
 	float min = 0.05f;	// explin why 0.05f
+	float minWheelRadius = 0.2f;
+
+
 	m_wheelChromes.speed = generateRandomFloat() * 20  + 10; 	// explaim why * 20 + 10
-	m_wheelChromes.radius = generateRandomFloat() + min;
+	m_wheelChromes.radius = generateRandomFloat() + minWheelRadius;	// change to minWheel
 
 	//generate line chromes
 
+	m_lineChromes.angle = generateRandomFloat() * 2 * M_PI;
 	m_lineChromes.limit = generateRandomFloat() * min * M_PI;
 	m_lineChromes.width = generateRandomFloat() * 0.2f + min;
 	m_lineChromes.length = generateRandomFloat() * 5 + 1;
 
-	std::cout << "lineChromes.angle: " << m_lineChromes.angle << std::endl;
 
+	// genreate wheel or line
 	if (generateRandomBool()) {
 		m_lineChromes.wheel.push_back(m_wheelChromes);
 	}
 	else {
-		auto lines = generateRandomInt() - 1;
-		while (lines-- > 0) {
-			m_lineChromes.lines.push_back(m_lineChromes);
+		auto lines = generateRandomInt() - 1;	// determins how many line segments there are
+		while (lines-- > 0) {					// while not created all line segments
+			m_lineChromes.lines.push_back(m_lineChromes);	// push line segment to line chromes
 		}
 	}
+	
 
-	// create agent chromes
+	// create agent chromes - 
 	auto lines = generateRandomInt() - 1;
-	std::cout << "rand int: " << lines << std::endl;
 	while (lines-- > 0) {
 		m_agentChromes.lines.push_back(m_lineChromes);
 	}
+	*/
 
-}	
+	// generate wheel chromes
+	float min = 0.05f;	// explin why 0.05f
+	float minWheelRadius = 0.1f;
 
+	int maxWheels = 1;
+	int numWheels = 0;
 
-// seperate chromosomes 
-/*
-void GeneticAlgorithm::generateMagnitudesAndAngles()
-{
-	
-	std::cout << "1.1" << std::endl;
-	for (int i = 0; i < NUM_AGENT_POP; i++) {
-		float angles[MAX_AGENT_BODY_EDGES];
-		float angleSum = 0;
-		for (int j = 0; j < MAX_AGENT_BODY_EDGES; j++) {
-			std::cout << *m_chromosomes[i][j] << std::endl;
-			*m_magnitudes[i][j] = *m_chromosomes[i][j];
-			angles[j] = *m_chromosomes[i][j + 8];
-			angleSum += angles[j];	
+	//generate line chromes
+
+	auto lines = generateRandomInt(m_symmetrySize, m_symmetrySize);
+	while (lines-- > 0) {
+
+		m_wheelChromes.speed = generateRandomFloat(0.1f, 1.0f) * 20 + 10; 	// explaim why * 20 + 10
+		m_wheelChromes.radius = generateRandomFloat() + minWheelRadius;	// change to minWheel
+
+		m_lineChromes.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+		m_lineChromes.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
+		m_lineChromes.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
+		m_lineChromes.length = generateRandomFloat(0.5f, 4.0f) * 5 + 1;
+
+		// genreate wheel or line
+		if (generateRandomBool()) {
+			//m_lineChromes.wheel.push_back(m_wheelChromes);
+		} 
+		else {
+			//auto lines = generateRandomInt() - 1;	// determins how many line segments there are
+			//while (lines-- > 0) {					// while not created all line segments
+			m_lineChromes.lines.push_back(m_lineChromes);	// push line segment to line chromes
+			//}
 		}
 
-		// sum of angles must equal (n - 2)*180
-
-		float angle = 0;
-		for (int j = 0; j < MAX_AGENT_BODY_EDGES; j++) {	
-			std::cout << "1.3" << std::endl;
-			*m_angles[i][j] = (angle + angles[j] / angleSum * M_PI * 2);
-			angle = *m_angles[i][j];
-		}
+		// create agent chromes - 
+		m_agentChromes.lines.push_back(m_lineChromes);
 	}
-	std::cout << "1.2" << std::endl;
-}
-*/
+	
+}	
 
 
 void GeneticAlgorithm::resetDefinitions()
@@ -126,44 +149,131 @@ void GeneticAlgorithm::resetDefinitions()
 	m_lineChromes.wheel.clear();
 }
 
+void GeneticAlgorithm::addAgentChromes(LineChromes line)
+{
+	m_agentChromes.lines.emplace_back(line);
+}
 
-/* ------ spare code
-// 0 - 7 (megnitude chromosomes)
-int magnitudeSize = 8;
-int magnitudeOffSet = 0;
-// 8 - 15 (angle chromosomes)
-int angleSize = 8;
-int angleOffSet = 8;
-// 16 - 17 (wheel position chromosomes)
+void GeneticAlgorithm::OutputChromes(LineChromes chromes, int bodyCount)
+{
+	std::cout << "b" << bodyCount << ":";
+		std::cout << chromes.angle << "," << chromes.limit << "," << chromes.width << "," << chromes.length << ";" << std::endl;
+		
+		if (chromes.wheel.size() > 0) {
+			for (int j = 0; j < chromes.wheel.size(); j++) {
+				std::cout << "w" << j << ":";
+				std::cout << chromes.wheel[j].speed << "," << chromes.wheel[j].radius << ";" << std::endl;
+			
+			}
+		}
 
-//static std::mt19937 randEng;
-//randEng.seed(time(nullptr));
-static std::default_random_engine randEng;
-static std::uniform_real_distribution<> randMagnitude(0.2f, 1.0f);	// magnitude range
-static std::uniform_real_distribution<> randAngle(0.2f, 1.0f);	// angle range
-
-
-for (int i = 0; i < NUM_AGENT_POP; i++) {
-	// magnitudes
-	for (int j = 0; j < magnitudeSize; j++) {
-		float num;
-		num = randMagnitude(randEng);
-		m_chromosomes[i][j] = &num; // store value in chromosomes
-		m_magnitudes[i][j] = &num;	// store magnitude chromosomes in array of magnitudes
-		//std::cout << *m_chromosomes[i][j] << std::endl;
-	}
-
-	// angles
-	for (int j = 0; j < angleSize; j++) {
-		float num;
-		num = randAngle(randEng);
-		m_chromosomes[i][j + angleOffSet] = &num;
-		m_angles[i][j] = &num;
-	}
-
-	//wheels
+		if (chromes.lines.size() > 0) {
+			for (int j = 0; j < chromes.lines.size(); j++) {
+				OutputChromes(chromes.lines[j], j);
+			}
+		}
 
 }
 
-// Make angles sum to the interior of polygon
-*/
+void GeneticAlgorithm::FlattenChrome()
+{
+	for (int i = 0; i < m_agentChromes.lines.size(); i++) {
+		//std::cout << "" << std::endl;
+		std::cout << "L" << i << ":" << std::endl;
+		OutputChromes(m_agentChromes.lines[i], 0);
+	}
+}
+
+void GeneticAlgorithm::MutateGenome(LineChromes chromes, int bodyCount)
+{
+	//std::cout << "b" << bodyCount << ":";
+	//std::cout << chromes.angle << "," << chromes.limit << "," << chromes.width << "," << chromes.length << ";" << std::endl;
+
+	GeneticAlgorithm* g = new GeneticAlgorithm();
+
+	//angle 
+	if (g->generateRandomFloat(0.0f, 1.0f) <= m_mutationChance) {
+		if (g->generateRandomBool()) {
+			chromes.setAngle(chromes.angle + (chromes.angle * m_mutationRate));
+		}
+		else {
+			chromes.setAngle(chromes.angle - (chromes.angle * m_mutationRate));
+		}
+		//std::cout << "angle change" << std::endl;
+	}
+	// limit
+	if (g->generateRandomFloat(0.0f, 1.0f) <= m_mutationChance) {
+		if (g->generateRandomBool()) {
+			chromes.setLimit(chromes.limit + (chromes.limit * m_mutationRate));
+		}
+		else {
+			chromes.setLimit(chromes.limit - (chromes.limit * m_mutationRate));
+		}
+		//std::cout << "limit change" << std::endl;
+	}
+	// width
+	if (g->generateRandomFloat(0.0f, 1.0f) <= m_mutationChance) {
+		if (g->generateRandomBool()) {
+			chromes.setWidth(chromes.width + (chromes.width * m_mutationRate));
+		}
+		else {
+			chromes.setWidth(chromes.width - (chromes.width * m_mutationRate));
+		}
+		//std::cout << "width change" << std::endl;
+	}
+	// length
+	if (g->generateRandomFloat(0.0f, 1.0f) <= m_mutationChance) {
+		if (g->generateRandomBool()) {
+			chromes.setLength(chromes.length + (chromes.length * m_mutationRate));
+		}
+		else {
+			chromes.setLength(chromes.length - (chromes.length * m_mutationRate));
+		}
+		//std::cout << "length change" << std::endl;
+	}
+
+	if (chromes.lines.size() > 0) {
+		for (int j = 0; j < chromes.lines.size(); j++) {
+			MutateGenome(chromes.lines[j], j);
+		}
+	}
+
+}
+
+void GeneticAlgorithm::SearchAgentChromes()
+{
+	for (int i = 0; i < m_agentChromes.lines.size(); i++) {
+		MutateGenome(m_agentChromes.lines[i], 0);
+	}
+}
+
+void GeneticAlgorithm::outputAgentChromes()
+{
+	std::cout << "_______________________" << std::endl;
+	std::cout << "--NEW GENOME CREATED--" << std::endl;
+	std::cout << "_______________________" << std::endl;
+	for (int i = 0; i < m_agentChromes.lines.size(); i++) {
+		std::cout << "Main body angle: " << m_agentChromes.lines[i].angle << std::endl;
+		std::cout << "Main body limit: " << m_agentChromes.lines[i].limit << std::endl;
+		std::cout << "Main body width: " << m_agentChromes.lines[i].width << std::endl;
+		std::cout << "Main body length: " << m_agentChromes.lines[i].length << std::endl;
+
+		std::cout << " LINE ATTACHENTS:" << std::endl;
+		std::cout << "____________________________________________" << std::endl;
+		for (int j = 0; j < m_agentChromes.lines[i].lines.size(); j++) {
+			std::cout << "Line attachment " << j << std::endl;
+			std::cout << "     attachment angle: " << m_agentChromes.lines[i].lines[j].angle << std::endl;
+			std::cout << "     attachment limit: " << m_agentChromes.lines[i].lines[j].limit << std::endl;
+			std::cout << "     attachment width: " << m_agentChromes.lines[i].lines[j].width << std::endl;
+			std::cout << "     attachment length: " << m_agentChromes.lines[i].lines[j].length << std::endl;
+		}
+
+		std::cout << "____________________________________________" << std::endl;
+		for (int j = 0; j < m_agentChromes.lines[i].wheel.size(); j++) {
+			std::cout << "Wheel attachment " << j << std::endl;
+			std::cout << "     wheel speed: " << m_agentChromes.lines[i].wheel[j].speed << std::endl;
+			std::cout << "     wheel radius: " << m_agentChromes.lines[i].wheel[j].radius << std::endl;
+		}
+	}
+}
+

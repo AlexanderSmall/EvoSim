@@ -30,7 +30,7 @@
 
 #include <functional>
 
-//static const int NUM_AGENT_POP = 10;
+
 
 class World
 {
@@ -41,83 +41,89 @@ public:
 
 	void initWorld();
 	void initCamera();
-
 	void createWorld();
 
-	void updateWorld();
-
-	void createAgentsTwo();
-
 	void setCameraPosition(glm::vec2 position);
-
 	void initShaders();
 
 	b2World* getWorld() { return m_b2world;  }
-	//std::vector<Agent*> getAgents() { return m_agents;	 } 
 
-	void compute();
+	void FollowBestAgent();
 
 	void update();
-
 	void render();
 
-	void drawGame();
 
-	void sortAgentParts();
+	void createAgents();
 
+	void spawnAgent(int ID, int x, int y);
+	void spawnAgent(GeneticAlgorithm* GA, int ID, int x, int y);
 
-	// setters
-	void spawnAgent(int x, int y);
+	void clearAgents();
+
+	void randomMethod();
+
+	void OutputAgentChromes();
+
+	void OutputAgentID();
+
+	// Evolution methods	
+	void CalculateStatistics();
+	
+	void incrementAgentAge();
+
+	void sortAgents();
+	void SelectFertileAgents();		// select the Agents for breeding/evolution
+
+	void SelectAgentPartners();
+
+	void CreateSurvivingAgents();
+	void MutateGenome();
+	GeneticAlgorithm* CrossoverAgent(Agent* a1, Agent* a2);
+
+	void EvolveAgents();			// preform cross-over, mutation
+
+	void incrementEpoch() { m_currentEpoch++; }
 
 	//std::map<std::string, std::function<void()>> actions;
 
 private:
 
-	void createAgents();
+	void createTerrain();
 
 	const float GRAVITY = -15.0f;
 	static const int ITERATIONS = 30;
 
 	b2World* m_b2world;
-	b2Body* m_groundBody;	// ground body
-	b2PolygonShape m_groundBox; // ground box - temp
 
 	odingine::GLSLProgram m_colorProgram; ///< The shader program
 	
-	odingine::Camera2D m_camera; ///< Main Camera
-
-
 	const int m_screenWidth = 1024;
 	const int m_screenHeight = 500;
-	
 	odingine::Window* m_window; ///< The game window
+	odingine::Camera2D m_camera; ///< Main Camera
 
 	b2draw::DebugDraw* m_debugDraw;
 
-	// Render& i(Render&); // what does this do?
-	//Render* m_renderer
-
-
 	// Agents
-	std::vector<Agent*> m_agents;
+	int m_agentCount = 0;
+
+	static const int NUM_AGENT_POP = 60;	// MINIMUM POPULATION SIZE = 20
+	const float MUTATION_RATE = 0.05;
+	const float CULL_PERCENTAGE = 0.5;
+
+	int m_currentEpoch = 0;
+	int m_maxAge = 20;
+
+	std::vector<Agent*> m_agents;	// holds current population of agents
+	static const int cullPop = (int)NUM_AGENT_POP * 0.5;
+	Agent* m_fertileAgentsSelection[cullPop];
+	Agent* m_fertileAgents[NUM_AGENT_POP];
 
 	// Terrain
 	Terrain* m_terrain;
 
-	// GeneticAlgorithm
-	GeneticAlgorithm* m_GA;
-
-
-	// contact listener
-	//ContactListener *m_contactListener;
-
-	Agent* agent;	// temp agent to hold value during creation
-
 	bool should_regenerate = false;
-
-	float* m_pMvpMatStart;
-
-	GLint m_mvpAttribLoc;
 
 	int m_clickX;
 	int m_clickY;

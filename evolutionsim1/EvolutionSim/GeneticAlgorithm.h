@@ -3,7 +3,6 @@
 #include <random>
 #include <ctime>
 
-
 static const int NUM_AGENT_POP = 10;
 static const int MAX_AGENT_BODY_EDGES = 8;
 static const int NUM_CHROMES = 16;
@@ -24,9 +23,14 @@ struct LineChromes {
 	float limit;
 	float width;
 	float length;
-
 	std::vector<WheelChromes> wheel;
+	
 	std::vector<LineChromes> lines;
+
+	void setAngle(float angle) { this->angle = angle; };
+	void setLimit(float limit) { this->limit = limit; };
+	void setWidth(float width) { this->width = width; };
+	void setLength(float length) { this->length = length; };
 };
 
 struct AgentChromes {
@@ -39,14 +43,15 @@ public:
 	GeneticAlgorithm();
 	~GeneticAlgorithm();
 
-	int get_rand();
-
 	float generateRandomFloat();
 	float generateRandomInt();
 	bool generateRandomBool();
 
-	void generateChromosomes();
+	float generateRandomInt(int i1, int i2);
+	float generateRandomFloat(float f1, float f2);
 
+	void generateChromosomes();
+	
 	// getters
 		// Agent chromes
 	AgentChromes getAgentChromes() { return m_agentChromes; }
@@ -54,29 +59,42 @@ public:
 	//wheel chromes
 	WheelChromes getWheelChromes() { return m_wheelChromes; }
 
+	WheelChromes getWheelChromes(int lineIndex, int wheelIndex);
+
 	// line (body) chromes
 	LineChromes getLineChromes() { return m_lineChromes; }
 
-	void resetDefinitions();
+	void outputAgentChromes();
 
+	void MutateGenome(LineChromes chromes, int bodyCount);
+	void SearchAgentChromes();
 
-
-	//void generateMagnitudesAndAngles();
-
-	//float getMagnitudes(int agentIndex, int lineIndex) { return *m_magnitudes[agentIndex][lineIndex];	 }
-	//float getAngles(int agentIndex, int lineIndex) { return *m_angles[agentIndex][lineIndex]; }
+	void addAgentChromes(LineChromes line);
 
 	
 
+	void resetDefinitions();
+
+	void OutputChromes(LineChromes chromes, int bodyCount);
+
+	void FlattenChrome();
+
+	int getSymmetrySize() { return m_symmetrySize; }
+	void setSymmetrySize(int symm) { m_symmetrySize = symm; }
+
 private:
 
-	//static const int RANDOM_ENGINE_SEED = 1;
-	//int RANDOM_ENGINE_SEED = 1;
 	int RANDOM_ENGINE_SEED;
 
+	int m_symmetrySize = 2;
+
+	float m_mutationRate = 0.4;
+	float m_mutationChance = 0.05;
+
+	// REMOVE:
 	//limits - may remove access from GA to range limits of random variables
-	float m_minFloatLimit = 1.0f, m_maxFloatLimit = 3.0f;
-	int m_minIntLimit = 1, m_maxIntLimit = 2;
+	float m_minFloatLimit = 2.0f, m_maxFloatLimit = 3.0f;
+	int m_minIntLimit = 1, m_maxIntLimit = 3;
 
 
 	// Agent chromes
@@ -88,12 +106,9 @@ private:
 	// line (body) chromes
 	LineChromes m_lineChromes;
 
-	// 
-
-	//float* m_magnitudes[NUM_AGENT_POP][MAX_AGENT_BODY_EDGES];	// buffer holds magnitude info for each agent
-	//float* m_angles[NUM_AGENT_POP][MAX_AGENT_BODY_EDGES];
-
-	//float* m_chromosomes[NUM_AGENT_POP][NUM_CHROMES];
+	// NOTE :: CREATE GNOME CONVENIENT FOR BREEDING/EVOLUTION
+	// convert Agent chromes to linear vector - how to convert back into agent? maybe not
+	// need to work out how to traverse Agent chromes - use recurrsion 
 
 
 

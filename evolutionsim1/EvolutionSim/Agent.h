@@ -13,7 +13,7 @@
 class Agent {
 public:
 
-	Agent(GeneticAlgorithm* GA, b2World* b2world, int x, int y);
+	Agent(GeneticAlgorithm* GA, b2World* b2world, int ID, int x, int y);
 	~Agent();
 
 	void init(b2BodyDef &bodyDef);
@@ -22,7 +22,7 @@ public:
 	const  odingine::ColorRGBA8& getColor() const { return m_color; }
 
 	b2Vec2 getPosition() { return m_agentBody->GetPosition(); }
-	void drawAgent();
+
 
 	// getters
 	static const int getMAX_AGENT_BODY_EDGES() { return MAX_AGENT_BODY_EDGES; }	// REMOVE
@@ -31,17 +31,32 @@ public:
 
 	b2Body* getAgentBody() { return m_agentBody; }
 
+	int getEpochAge() { return m_epochAge;  }
+
+	void incrementAge() { m_epochAge++;}
+
+	GeneticAlgorithm* getGA() { return m_GA; }
+
+	void setGA(GeneticAlgorithm* GA);
+
+	int getID() { return m_ID; }
+	void setID(int ID) { this->m_ID = ID; };
+
+	int totalAgents;
+	int getTotalAgents() { return totalAgents; }
+
 private:
+
+	int m_ID;
 
 	// world variables
 	b2World* m_b2world;
-	GeneticAlgorithm* m_GA;				 // Genome
-
 
 	// Agent variables
-	int m_agentID;
-	//glm::vec2 m_position;				 // position of body	
+	int m_agentID;						 // agent ID
+	GeneticAlgorithm* m_GA;				 // Genome
 	odingine::ColorRGBA8 m_color;		 // colour
+	int m_epochAge = 0;
 
 	// Box2D Agent variables
 	b2Body* m_agentBody = nullptr;
