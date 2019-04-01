@@ -15,8 +15,10 @@ constexpr char const* const pColourAttribName = "colour";
 const int GRAVITY = -9.81;
 
 std::default_random_engine generator;
+
 int fertileSize = (int)NUM_AGENT_POP * 0.5;	// calculate and cast fertileSize to int
-std::discrete_distribution<int> CullDistribution{ 0,1,2,2,3,3,4,4,5,5 };
+std::discrete_distribution<int> CullDistribution{ 1,1,2,2,3,3,4,4,5,5 };
+//std::discrete_distribution<int> CullDistribution{ 1,1,2,2,3,3,3,3,3,3 };
 std::discrete_distribution<int> MateSelectionDistrobution{ 4,4,4,3,3,3,3,2,1,1 };
 
 // create initialisation lists
@@ -41,12 +43,7 @@ void World::initWorld()
 	m_debugDraw = new b2draw::DebugDraw(glGetAttribLocation(m_colorProgram.getProgramID(), pPositionAttribName),
 		glGetAttribLocation(m_colorProgram.getProgramID(), pColourAttribName), 16, 0.f);
 
-	uint32 flags = 0;
-	flags += b2Draw::e_shapeBit;
-	flags += b2Draw::e_jointBit;
-	//flags += b2Draw::e_aabbBit;
-	flags += b2Draw::e_centerOfMassBit;
-	m_debugDraw->SetFlags(flags);
+	setFlags(true);
 	std::cout << m_debugDraw->GetFlags() << " - flags" << std::endl;
 
 	createWorld();
@@ -55,14 +52,31 @@ void World::initWorld()
 
 	createTerrain();
 
-	//randomMethod();
+	randomMethod();
 
 	createAgents();
 
 
 }
 
-void World::randomMethod() {	// method to test distrobution of random variables
+void World::setFlags(bool toggle) 
+{
+	if (toggle) {
+		uint32 flags = 0;
+		flags += b2Draw::e_shapeBit;
+		//flags += b2Draw::e_jointBit;
+		//flags += b2Draw::e_aabbBit;
+		//flags += b2Draw::e_centerOfMassBit;
+		m_debugDraw->SetFlags(flags);
+	}
+	else {
+		uint32 flags = 0;
+		m_debugDraw->SetFlags(flags);
+	}
+}
+
+void World::randomMethod() 
+{	// method to test distrobution of random variables
 	
 	int distrobution[10];
 
@@ -70,12 +84,29 @@ void World::randomMethod() {	// method to test distrobution of random variables
 		distrobution[i] = 0;
 	}
 
+	generator.seed(time(0));		// set seed of generator
+
 	int rand;
+	for (int i = 0; i < 50; i++) {
+		rand = CullDistribution(generator);
+		distrobution[rand] += 1;
+	}
+
+	std::cout << "CullDistrobution" << std::endl;
+	for (int i = 0; i < 10; i++) {
+		std::cout << i << ": " << distrobution[i] << std::endl;
+	}
+
+	for (int i = 0; i < 10; i++) {
+		distrobution[i] = 0;
+	}
+
 	for (int i = 0; i < 50; i++) {
 		rand = MateSelectionDistrobution(generator);
 		distrobution[rand] += 1;
 	}
 
+	std::cout << "MateSelectionDistrobution" << std::endl;
 	for (int i = 0; i < 10; i++) {
 		std::cout << i << ": " << distrobution[i] << std::endl;
 	} 
@@ -114,8 +145,8 @@ void World::createAgents()
 
 void World::createTerrain() {
 	m_terrain = new Terrain(m_b2world);
-	//m_terrain->CreateHillTerrain();
-	m_terrain->CreateRoughTerrain();
+	m_terrain->CreateHillTerrain();
+	//m_terrain->CreateRoughTerrain();
 	//m_terrain->CreateFlatTerrain();
 }
 
@@ -181,7 +212,6 @@ void World::update()
 
 	FollowBestAgent();
 
-
 	m_b2world->DrawDebugData();	//
 
 	m_debugDraw->BufferData();	// 
@@ -195,7 +225,6 @@ void World::render()
 	m_colorProgram.use();
 	
 	glUseProgram(m_colorProgram.getProgramID());
-	//glUniformMatrix4fv(m_mvpAttribLoc, 1, GL_FALSE, m_pMvpMatStart);
 	
 	//get camera matrix
 	GLint pUniform = m_colorProgram.getUniformLocation("MVP");
@@ -238,34 +267,58 @@ void World::spawnAgent(GeneticAlgorithm* GA, int ID, int x, int y)	// spawn agen
 
 void World::clearAgents() 
 {
-	//for (int i = 0; i < m_agents.size(); i++) {
-	//	m_b2world->DestroyBody(m_agents[i]->getAgentBody());
-	//}
+	/*
+	for (int i = 0; i < m_agents.size(); i++) {
+		m_b2world->DestroyBody(m_agents[i]->getAgentBody());
+	}*/
 
-	//m_b2world->DestroyBody(m_b2world->GetBodyList());
+	//m_b2world->DestroyBody(m_b2world->GetBodyList());	
 
 	//std::cout << "body list: " << m_b2world->GetBodyList() << std::endl;
 	//std::cout << "body count: " << m_b2world->GetBodyCount() << std::endl;
-		
+
+	//std::cout << "agents before: " << m_b2world->GetBodyCount() << std::endl;
+	
 	for (int i = 0; i < m_b2world->GetJointCount(); i++) {
 		m_b2world->DestroyJoint(m_b2world->GetJointList());
 		m_b2world->GetJointList()->GetNext();
 	}
 
-	for (int i = 0; i < m_b2world->GetBodyCount(); i++) {	// destroy all bodies in the world
+	//int count = 0;
+	while (m_b2world->GetBodyCount() > 2) {
 
-		for (b2Fixture* f = m_b2world->GetBodyList()->GetFixtureList(); f;) {
-			b2Fixture* ftd = f;
-			f = f->GetNext();
-			m_b2world->GetBodyList()->DestroyFixture(ftd);
-		}
-
-		m_b2world->DestroyBody(m_b2world->GetBodyList());
-		m_b2world->GetBodyList()->GetNext();
+		//for (int i = 0; i < m_b2world->GetBodyCount(); i++) {	// destroy all bodies in the world
+		/*
+			for (b2Fixture* f = m_b2world->GetBodyList()->GetFixtureList(); f;) {
+				b2Fixture* ftd = f;
+				f = f->GetNext();
+				m_b2world->GetBodyList()->DestroyFixture(ftd);
+			}
+		*/
+			m_b2world->DestroyBody(m_b2world->GetBodyList());
+			m_b2world->GetBodyList()->GetNext();
+			//std::cout << "count: " << count << std::endl;
+			//count++;
+		//}
 	}
+	
+	//for (b2Body* b = m_b2world->GetBodyList(); b; /*b = b->GetNext()*/)  // remove GetNext() call
+	/*
+	{
+		if (b->GetUserData() != NULL) {
+			//CCSprite *s = (CCSprite *)b->GetUserData();
+			//[self removeChild : s cleanup : YES];
+			b2Body* next = b->GetNext();  // remember next body before *b gets destroyed
+			m_b2world->DestroyBody(b); // do I need to destroy fixture as well(and how?) or it does that for me?
+			b = next;  // go to next body
+		}
+	}*/
 
 
 	m_agents.clear();
+
+
+	//std::cout << "agents remaining: " << m_b2world->GetBodyCount() << std::endl;
 
 	//std::cout << "body list2: " << m_b2world->GetBodyList() << std::endl;
 	//std::cout << "body count2: " << m_b2world->GetBodyCount() << std::endl;
@@ -301,23 +354,53 @@ void World::CalculateStatistics()
 	// calculate Q1 and Q3 of population - plot on graph
 
 	float totalDistance = 0;
-	float bestAgentDistance = 0;
-	for (int i = 0; i < m_agents.size(); i++) {
+	for (int i = 0; i < NUM_AGENT_POP; i++) {
 		int distance = m_agents[i]->getPosition().x;
 		totalDistance += distance;
-		if (distance > bestAgentDistance) {
-			bestAgentDistance = distance;
-		}
 	}
 	float mean = totalDistance / NUM_AGENT_POP;
 
 
 	std::cout << "EPOCH: " << m_currentEpoch << std::endl;
-	std::cout << "BEST AGENT: " << bestAgentDistance << std::endl;
+	std::cout << "BEST AGENT: " << m_agents[0]->getPosition().x << std::endl;
+	std::cout << "WORST AGENT: " << m_agents[NUM_AGENT_POP - 1]->getPosition().x << std::endl;
 	std::cout << "MEAN: " << mean << std::endl;
 
 	int medianIndex = (int) NUM_AGENT_POP / 2;
 	std::cout << "MEDIAN: " << m_agents[medianIndex]->getPosition().x << std::endl;
+
+	// calculate variance
+	float variance;
+	float varianceTotal = 0;
+	for (int i = 0; i < NUM_AGENT_POP; i++) {
+		varianceTotal += pow(m_agents[i]->getPosition().x - mean, 2);
+	}
+	variance = varianceTotal / NUM_AGENT_POP - 1;
+
+	std::cout << "VARIANCE: " << variance << std::endl;
+
+	float stdv = sqrt(variance);
+
+	std::cout << "STANDARD DEVIATION: " << stdv << std::endl;
+
+	std::ofstream file2;
+	file2.open("BestAgents.txt", std::ofstream::out | std::ios_base::app);
+	file2 << m_agents[0]->getGA()->FlattenChrome();
+	file2.close();
+	m_agents[0]->getGA()->resetStringChrome();
+
+	// save values to file
+	std::ofstream file;
+	file.open("statData.txt", std::ofstream::out | std::ios_base::app);
+	file << m_currentEpoch << "," << m_agents[0]->getPosition().x << "," << m_agents[NUM_AGENT_POP - 1]->getPosition().x << "," 
+		<< mean << "," << m_agents[medianIndex]->getPosition().x << "," << variance << "," << stdv << std::endl;
+	file.close();
+
+	//std::ofstream file;
+	//can't enable exception now because of gcc bug that raises ios_base::failure with useless message
+	//file.exceptions(file.exceptions() | std::ios::failbit);
+
+
 
 }
 
@@ -365,11 +448,17 @@ void World::SelectFertileAgents()
 	for (int i = 0; i < m_agents.size(); i++) {	
 		m_fertileAgents[i] = m_agents[i];	// transfer agent data to array datatype
 	}
+	
+	// HOW TO CLEAR AGENTS CORRECTLY!?!?!
+	
 	clearAgents();	// clear the existing agents from m_agents and m_b2world
-	clearAgents();
-	clearAgents();
-	clearAgents();
-	clearAgents();
+	//clearAgents();
+	//clearAgents();
+	//clearAgents();
+	//clearAgents();
+
+
+
 
 	// kill 50 agents (1/2 of agents)
 	// if agent age over x amount then destroy first
@@ -388,16 +477,18 @@ void World::SelectFertileAgents()
 	int index = 0;
 	float rand = 0;
 	int numAgents = NUM_AGENT_POP;
+	generator.seed(time(0));		// set seed of generator
 	while (numAgents > NUM_AGENT_POP * CULL_PERCENTAGE) {		// 100 * 0.5 = 50 (cull 50% of populations)	
 		//rand = g->generateRandomInt(0, NUM_AGENT_POP);
 		//m_agents.erase(m_agents.begin() + rand);
 
 		offset = CullDistribution(generator);
-		//std::cout << "offset: " << offset <<  " - index:" << ((offset + 1) * (NUM_AGENT_POP / 10) - g->generateRandomInt(1, NUM_AGENT_POP / 10)) << std::endl;
-		index = (offset) * (NUM_AGENT_POP / 10) + g->generateRandomInt(0, (NUM_AGENT_POP / 10) - 1);
+		int randNum = g->generateRandomInt(0, (NUM_AGENT_POP / 10) - 1);
+		index = (offset) * (NUM_AGENT_POP / 10) + randNum;
 		if (m_fertileAgents[index] != NULL) {
+			//std::cout << "index: " << index << " " << "offset: " << offset << "(" << NUM_AGENT_POP << "/" << 10 << ") + " << randNum << std::endl;
+			//std::cout << "REMOVED " << m_fertileAgents[index]->getID() << std::endl;
 			m_fertileAgents[index] = NULL; // divide by 10 because the size of distrobution
-			//std::cout << "REMOVED " << index << std::endl;
 			numAgents--;
 		}
 		else {
@@ -446,6 +537,7 @@ void World::SelectAgentPartners() 	// takes list of fertile agents selects pairs
 	//int sampleSize = 50;
 	//for (int i = 0; i < NUM_AGENT_POP * CULL_PERCENTAGE; i++) {
 	int newAgents = 0;
+	generator.seed(time(0));	// set seed of generator
 	while (newAgents < NUM_AGENT_POP * CULL_PERCENTAGE) {
 		int offset = MateSelectionDistrobution(generator);
 		int index = (offset) * ((NUM_AGENT_POP / 10) * CULL_PERCENTAGE) + g->generateRandomInt(1, (NUM_AGENT_POP / 10)  * CULL_PERCENTAGE);

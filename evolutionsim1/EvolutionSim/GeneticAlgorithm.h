@@ -77,7 +77,8 @@ public:
 
 	void OutputChromes(LineChromes chromes, int bodyCount);
 
-	void FlattenChrome();
+	std::string FlattenChrome();
+	void resetStringChrome();
 
 	int getSymmetrySize() { return m_symmetrySize; }
 	void setSymmetrySize(int symm) { m_symmetrySize = symm; }
@@ -96,6 +97,7 @@ private:
 	float m_minFloatLimit = 2.0f, m_maxFloatLimit = 3.0f;
 	int m_minIntLimit = 1, m_maxIntLimit = 3;
 
+	std::string m_stringChromes;
 
 	// Agent chromes
 	AgentChromes m_agentChromes;

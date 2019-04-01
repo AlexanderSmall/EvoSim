@@ -1,5 +1,7 @@
 #include "InputManager.h"
 
+#include <iostream>
+
 namespace odingine {
 
 	InputManager::InputManager() : _mouseCoords(0.0f)
@@ -54,9 +56,6 @@ namespace odingine {
 	}
 
 	bool InputManager::wasKeyDown(unsigned int keyID) {
-		// We dont want to use the associative array approach here
-		// because we don't want to create a key if it doesnt exist.
-		// So we do it manually
 		auto it = _previousKeyMap.find(keyID);
 		if (it != _previousKeyMap.end()) {
 			// Found the key

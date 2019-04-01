@@ -6,6 +6,7 @@
 #include <math.h>
 #include <functional>
 #include <iostream>
+#include <string>
  
 #define M_PI acos(-1.0)
 
@@ -156,9 +157,12 @@ void GeneticAlgorithm::addAgentChromes(LineChromes line)
 
 void GeneticAlgorithm::OutputChromes(LineChromes chromes, int bodyCount)
 {
-	std::cout << "b" << bodyCount << ":";
-		std::cout << chromes.angle << "," << chromes.limit << "," << chromes.width << "," << chromes.length << ";" << std::endl;
-		
+	//std::cout << "b" << bodyCount << ":";
+	m_stringChromes += "b" + std::to_string(bodyCount) + ":";
+		//std::cout << chromes.angle << "," << chromes.limit << "," << chromes.width << "," << chromes.length << ";" << std::endl;
+		m_stringChromes += std::to_string(chromes.angle) + "," + std::to_string(chromes.limit), "," + std::to_string(chromes.width) + "," + std::to_string(chromes.length) + ";" + "\n";
+		m_stringChromes += "\n";
+
 		if (chromes.wheel.size() > 0) {
 			for (int j = 0; j < chromes.wheel.size(); j++) {
 				std::cout << "w" << j << ":";
@@ -172,16 +176,27 @@ void GeneticAlgorithm::OutputChromes(LineChromes chromes, int bodyCount)
 				OutputChromes(chromes.lines[j], j);
 			}
 		}
-
 }
 
-void GeneticAlgorithm::FlattenChrome()
+std::string GeneticAlgorithm::FlattenChrome()
 {
+	std::string* agentChrome = nullptr;
+
 	for (int i = 0; i < m_agentChromes.lines.size(); i++) {
 		//std::cout << "" << std::endl;
-		std::cout << "L" << i << ":" << std::endl;
+		//std::cout << "L" << i << ":" << std::endl;
+		m_stringChromes += "\nL" + std::to_string(i) + ":" + "\n";
 		OutputChromes(m_agentChromes.lines[i], 0);
 	}
+
+	std::cout << m_stringChromes << std::endl;
+	m_stringChromes += "\n============================";
+	return m_stringChromes;
+}
+
+void GeneticAlgorithm::resetStringChrome()
+{
+	m_stringChromes = "";
 }
 
 void GeneticAlgorithm::MutateGenome(LineChromes chromes, int bodyCount)

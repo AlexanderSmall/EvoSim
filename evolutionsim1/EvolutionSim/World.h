@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <fstream>
 
 #include <odingine/GLSLProgram.h>
 #include <odingine/Camera2D.h>
@@ -60,6 +61,8 @@ public:
 	void spawnAgent(GeneticAlgorithm* GA, int ID, int x, int y);
 
 	void clearAgents();
+
+	void setFlags(bool toggle);
 
 	void randomMethod();
 
@@ -122,6 +125,8 @@ private:
 
 	// Terrain
 	Terrain* m_terrain;
+
+	// Statistics
 
 	bool should_regenerate = false;
 

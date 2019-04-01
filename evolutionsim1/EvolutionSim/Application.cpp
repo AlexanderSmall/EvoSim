@@ -53,22 +53,36 @@ void Application::initWorld()
 
 void Application::gameLoop() {
 	odingine::FpsLimiter fpsLimiter; // create fps limiter
-	fpsLimiter.setMaxFPS(60.0f);
+	fpsLimiter.setMaxFPS(10.0f);
 
 	time_t startEpochTime = time(0);
 
+	double beforeRender = 0;
+	double timeToRender = 0;
+	// Implement Fixed Time Step
 	while (m_gameState == GameState::PLAY) {
 
-		double seconds = difftime(time(0), startEpochTime);	
-		if (seconds < 60) {	
+		fpsLimiter.begin();		// begin fps counter
+		double seconds = difftime(time(0), startEpochTime);
 
-			//fpsLimiter.begin();		// begin fps counter
+		//beforeRender = time(0);
+		checkUserInput();
+		//timeToRender = difftime(time(0), beforeRender);
+		//seconds -= timeToRender;
+
+		if (seconds < 100.0f) {	
+
 
 			processInput();			// process the users input
 			m_world->update();      // update Box2D world
+			
+			
+			// TEST: REMOVE REENDERING TIME FROM TIMER - may not work
+			beforeRender = time(0);
 			m_world->render(); 		// draw world
+			timeToRender = difftime(time(0), beforeRender);
+			seconds -= timeToRender;
 
-			// fpsLimiter.end();		// end fps counter
 		} else {
 			// reset world
 			std::cout << "=========" << std::endl;
@@ -86,16 +100,49 @@ void Application::gameLoop() {
 			// Create new and existing Agents
 			//m_world->createAgents();	// temp function - call create NEW agents
 
+			//m_world->OutputAgentID();
+
 			m_world->incrementEpoch();
 
 			startEpochTime = time(0);	// reset timer
 
 		}
 
-
-
+		m_fps = fpsLimiter.end();		// end fps counter
+		if (m_fpsToggle) std::cout << "fps: " << m_fps << std::endl;
 	}
 
+}
+
+void Application::checkUserInput()
+{
+	if (m_inputManager.isKeyDown(SDLK_r)) {	// Render bodies to the screen
+		if (m_render) {
+			m_world->setFlags(false);
+			m_render = false;
+		}
+		else {
+			m_world->setFlags(true);
+			m_render = true;
+		}
+	}
+
+	if (m_inputManager.isKeyDown(SDLK_f)) {	// Render bodies to the screen
+		if (m_fpsToggle) {	// turn off fps
+			m_fpsToggle = false;
+		}
+		else {	// turn on fps
+			m_fpsToggle = true;
+		}
+	}
+
+	if (m_inputManager.isKeyDown(SDLK_t)) {	// Render bodies to the screen
+		m_world->clearAgents();
+	}
+
+	if (m_inputManager.isKeyDown(SDLK_g)) {	// Render bodies to the screen
+		m_world->spawnAgent(-1, 10, 10);
+	}
 }
 
 void Application::updateAgents()
@@ -117,21 +164,21 @@ void Application::processInput() {
 			//Exit the game here!
 			break;
 		case SDL_MOUSEMOTION:
-			_inputManager.setMouseCoords(evnt.motion.x, evnt.motion.y);
+			m_inputManager.setMouseCoords(evnt.motion.x, evnt.motion.y);
 			break;
 		case SDL_KEYDOWN:
-			_inputManager.pressKey(evnt.key.keysym.sym);
+			m_inputManager.pressKey(evnt.key.keysym.sym);
 			break;
 		case SDL_KEYUP:
-			_inputManager.releaseKey(evnt.key.keysym.sym);
+			m_inputManager.releaseKey(evnt.key.keysym.sym);
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			_inputManager.pressKey(evnt.button.button);
+			m_inputManager.pressKey(evnt.button.button);
 			// place agent on click
 			//m_world->spawnAgent(clickX, clickY);
 			break;
 		case SDL_MOUSEBUTTONUP:
-			_inputManager.releaseKey(evnt.button.button);
+			m_inputManager.releaseKey(evnt.button.button);
 			break;
 		}
 

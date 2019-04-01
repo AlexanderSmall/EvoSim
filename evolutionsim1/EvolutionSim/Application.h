@@ -59,6 +59,8 @@ public:
 	/// Main game loop for the program
 	void gameLoop();
 
+	void checkUserInput();
+
 	// update agents
 	void updateAgents();
 
@@ -74,11 +76,13 @@ private:
 	const int m_screenWidth = 1024;
 	const int m_screenHeight = 500;
 	odingine::Window m_window; ///< The game window
-	odingine::InputManager _inputManager; ///< Handles input
+	odingine::InputManager m_inputManager; ///< Handles input
 
 	//odingine::SpriteBatch m_agentSpriteBatch; // draws agents
 
 	float m_fps;
+	bool m_render = false;
+	bool m_fpsToggle = false;
 
 	//int m_currentLevel;
 
