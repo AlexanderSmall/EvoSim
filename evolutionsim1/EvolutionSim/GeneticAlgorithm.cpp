@@ -7,6 +7,7 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <fstream>
  
 #define M_PI acos(-1.0)
 
@@ -122,7 +123,7 @@ void GeneticAlgorithm::generateChromosomes()
 		m_lineChromes.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
 		m_lineChromes.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
 		m_lineChromes.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
-		m_lineChromes.length = generateRandomFloat(0.5f, 4.0f) * 5 + 1;
+		m_lineChromes.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
 
 		// genreate wheel or line
 		if (generateRandomBool()) {

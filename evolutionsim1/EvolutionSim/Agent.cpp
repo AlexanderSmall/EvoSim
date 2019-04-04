@@ -42,7 +42,7 @@ struct AgentBuilder {
 
 		m_lineFixture.shape = &m_lineShape;
 		m_lineFixture.density = 2.0f;
-		m_lineFixture.friction = 0.7f;
+		m_lineFixture.friction = 1.0f;
 		m_lineFixture.filter.groupIndex = -1;
 
 		m_lineBody.type = b2_dynamicBody;
@@ -52,7 +52,7 @@ struct AgentBuilder {
 		// perhaps use these are chromes as well
 		m_boxFixture.shape = &m_boxShape;
 		m_boxFixture.density = 2000.0f;
-		m_boxFixture.friction = 0.3f;
+		m_boxFixture.friction = 1.0f;
 		m_boxFixture.filter.groupIndex = -1;
 
 		m_boxBody.type = b2_dynamicBody;
@@ -75,6 +75,7 @@ struct AgentBuilder {
 		body->CreateFixture(&m_lineFixture);
 		m_agentParts.push_back(body);
 
+		// no loner used
 		for (auto&& wg : gm.wheel) {
 			auto wheel = createWheel(wg);
 			wheel->SetTransform({ gm.length, 0.0 }, 0);
@@ -99,13 +100,14 @@ struct AgentBuilder {
 			m_lineJoint.lowerAngle = startAngle - sg.limit;
 			m_lineJoint.upperAngle = startAngle + sg.limit;
 			m_lineJoint.referenceAngle = startAngle;
-			m_lineJoint.motorSpeed = m_GA.generateRandomInt();
+			m_lineJoint.motorSpeed = 1; //m_GA.generateRandomInt();
 			m_b2world.CreateJoint(&m_lineJoint);
 		}
 
 		return body;
 	}
 
+	// no longer used
 	b2Body* createWheel(WheelChromes const & gm) {
 		m_wheelShape.m_radius = gm.radius;
 

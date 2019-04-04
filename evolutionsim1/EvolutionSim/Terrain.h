@@ -17,6 +17,10 @@ public:
 
 	void CreateWaterTerrain();
 
+	void saveTerrain();
+
+	void loadTerrain();
+
 private:
 	b2World* m_b2world;
 

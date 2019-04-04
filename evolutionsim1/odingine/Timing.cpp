@@ -24,9 +24,9 @@ namespace odingine {
 
 		float frameTicks = (float)(SDL_GetTicks() - _startTicks);
 		//Limit the FPS to the max FPS
-		if (1000.0f / _maxFPS > frameTicks) {
-			SDL_Delay((Uint32)(1000.0f / _maxFPS - frameTicks));
-		}
+		//if (1000.0f / _maxFPS > frameTicks) {
+		//	SDL_Delay((Uint32)(1000.0f / _maxFPS - frameTicks));
+		//}
 
 		return _fps;
 	}

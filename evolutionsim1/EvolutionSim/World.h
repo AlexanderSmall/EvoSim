@@ -45,6 +45,14 @@ public:
 	void createWorld();
 
 	void setCameraPosition(glm::vec2 position);
+
+	// user movement
+	void zoomIn();
+	void zoomOut();
+	void moveLeft();
+	void moveRight();
+
+
 	void initShaders();
 
 	b2World* getWorld() { return m_b2world;  }
@@ -64,7 +72,7 @@ public:
 
 	void setFlags(bool toggle);
 
-	void randomMethod();
+	void distrobutionCheck();
 
 	void OutputAgentChromes();
 

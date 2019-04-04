@@ -81,8 +81,9 @@ private:
 	//odingine::SpriteBatch m_agentSpriteBatch; // draws agents
 
 	float m_fps;
-	bool m_render = false;
+	bool m_renderToggle = false;
 	bool m_fpsToggle = false;
+	bool m_followBestAgentToggle = false;
 
 	//int m_currentLevel;
 

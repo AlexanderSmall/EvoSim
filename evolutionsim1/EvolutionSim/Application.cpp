@@ -39,7 +39,7 @@ void Application::run() {
 void Application::initSystems() {
 	// Empty
 	odingine::init();
-	m_window.create("Evolution Simulator", m_screenWidth, m_screenHeight, 0);	
+	m_window.create("EvoSim", m_screenWidth, m_screenHeight, 0);	
 	// Initialize spritebatch
 	//m_spriteBatch.init();
 }
@@ -53,7 +53,7 @@ void Application::initWorld()
 
 void Application::gameLoop() {
 	odingine::FpsLimiter fpsLimiter; // create fps limiter
-	fpsLimiter.setMaxFPS(10.0f);
+	fpsLimiter.setMaxFPS(60.0f);
 
 	time_t startEpochTime = time(0);
 
@@ -66,50 +66,37 @@ void Application::gameLoop() {
 		double seconds = difftime(time(0), startEpochTime);
 
 		//beforeRender = time(0);
-		checkUserInput();
 		//timeToRender = difftime(time(0), beforeRender);
 		//seconds -= timeToRender;
 
 		if (seconds < 100.0f) {	
 
 
-			processInput();			// process the users input
+
 			m_world->update();      // update Box2D world
-			
-			
-			// TEST: REMOVE REENDERING TIME FROM TIMER - may not work
-			beforeRender = time(0);
+
+
 			m_world->render(); 		// draw world
-			timeToRender = difftime(time(0), beforeRender);
-			seconds -= timeToRender;
+
+
+			processInput();			// process the users input
+			checkUserInput();
+
+			m_fps = fpsLimiter.end();		// end fps counter
+			if (m_fpsToggle) std::cout << "fps: " << m_fps << std::endl;
+
 
 		} else {
 			// reset world
-			std::cout << "=========" << std::endl;
-
-			// increment age of ages
-			//m_world->incrementAgentAge();
-
-			//m_world->clearAgents(); // uncomment
 
 			// Evole Agents
 			m_world->EvolveAgents();
 
-			//m_world->clearAgents(); // clear the agents from the world 
-
-			// Create new and existing Agents
-			//m_world->createAgents();	// temp function - call create NEW agents
-
-			//m_world->OutputAgentID();
-
+			// increment epoch
 			m_world->incrementEpoch();
 
 			startEpochTime = time(0);	// reset timer
-
 		}
-
-		m_fps = fpsLimiter.end();		// end fps counter
-		if (m_fpsToggle) std::cout << "fps: " << m_fps << std::endl;
 	}
 
 }
@@ -117,17 +104,17 @@ void Application::gameLoop() {
 void Application::checkUserInput()
 {
 	if (m_inputManager.isKeyDown(SDLK_r)) {	// Render bodies to the screen
-		if (m_render) {
+		if (m_renderToggle) {
 			m_world->setFlags(false);
-			m_render = false;
+			m_renderToggle = false;
 		}
 		else {
 			m_world->setFlags(true);
-			m_render = true;
+			m_renderToggle = true;
 		}
 	}
 
-	if (m_inputManager.isKeyDown(SDLK_f)) {	// Render bodies to the screen
+	if (m_inputManager.isKeyDown(SDLK_f)) {	// Display fps counter
 		if (m_fpsToggle) {	// turn off fps
 			m_fpsToggle = false;
 		}
@@ -136,13 +123,41 @@ void Application::checkUserInput()
 		}
 	}
 
-	if (m_inputManager.isKeyDown(SDLK_t)) {	// Render bodies to the screen
+	if (m_inputManager.isKeyDown(SDLK_p)) {	// Follow the best agent with the camera
+		if (m_followBestAgentToggle) {
+			m_world->FollowBestAgent();
+			m_followBestAgentToggle = false;
+		}
+		else {	// turn on fps
+			m_followBestAgentToggle = true;
+		}
+	}
+
+	if (m_inputManager.isKeyDown(SDLK_t)) {	// clear all agents from the world
 		m_world->clearAgents();
 	}
 
-	if (m_inputManager.isKeyDown(SDLK_g)) {	// Render bodies to the screen
+	if (m_inputManager.isKeyDown(SDLK_g)) {	// add one agent at 10, 10
 		m_world->spawnAgent(-1, 10, 10);
 	}
+
+	if (m_inputManager.isKeyDown(SDLK_z)) {	// Zoom in
+		m_world->zoomIn();
+	}
+
+	if (m_inputManager.isKeyDown(SDLK_x)) {	// Zoom out
+		m_world->zoomOut();
+	}
+
+	if (m_inputManager.isKeyDown(SDLK_k)) {	// Zoom in
+		m_world->moveLeft();
+	}
+
+	if (m_inputManager.isKeyDown(SDLK_l)) {	// Zoom out
+		m_world->moveRight();
+	}
+
+
 }
 
 void Application::updateAgents()

@@ -52,7 +52,7 @@ void World::initWorld()
 
 	createTerrain();
 
-	randomMethod();
+	distrobutionCheck();
 
 	createAgents();
 
@@ -75,7 +75,7 @@ void World::setFlags(bool toggle)
 	}
 }
 
-void World::randomMethod() 
+void World::distrobutionCheck() 
 {	// method to test distrobution of random variables
 	
 	int distrobution[10];
@@ -139,15 +139,17 @@ void World::createAgents()
 	int y = 0;
 
 	for (int i = 0; i < NUM_AGENT_POP; i++) {
-		spawnAgent(++m_agentCount, 0, 0);
+		spawnAgent(++m_agentCount, 10, 10);
 	}
 }
 
 void World::createTerrain() {
 	m_terrain = new Terrain(m_b2world);
-	m_terrain->CreateHillTerrain();
+	//m_terrain->CreateHillTerrain();
 	//m_terrain->CreateRoughTerrain();
-	//m_terrain->CreateFlatTerrain();
+	m_terrain->CreateFlatTerrain();
+
+	m_terrain->saveTerrain();
 }
 
 
@@ -156,6 +158,34 @@ void World::setCameraPosition(glm::vec2 position)
 	m_camera.setPosition(position); // set camera position
 	m_camera.update();
 }
+
+void World::zoomIn()
+{
+	m_camera.setScale(m_camera.getScale() + 0.1);
+}
+
+void World::zoomOut()
+{
+	m_camera.setScale(m_camera.getScale() - 0.1);
+}
+
+void World::moveLeft()
+{
+	glm::vec2 pos = m_camera.getPosition();
+	glm::vec2 newPos(pos.x - 5, pos.y);
+	m_camera.setPosition(newPos);
+	m_camera.update();
+}
+
+void World::moveRight()
+{
+	glm::vec2 pos = m_camera.getPosition();
+	glm::vec2 newPos(pos.x + 5, pos.y);
+	m_camera.setPosition(newPos);
+	m_camera.update();
+}
+
+
 
 void World::initShaders() {
 	// Compile our color shader
@@ -207,19 +237,23 @@ void World::update()
 {
 	//m_camera.update();	// maybe remove
 	m_b2world->Step(1.0f / 60.0f, 6, 2);
-	m_b2world->ClearForces();
-	m_debugDraw->Clear();
-
-	FollowBestAgent();
-
-	m_b2world->DrawDebugData();	//
-
-	m_debugDraw->BufferData();	// 
 	//logBodies(m_b2world);
 }
 
 void World::render()
 {
+	
+	
+	m_b2world->ClearForces();
+	m_debugDraw->Clear();
+
+	m_b2world->DrawDebugData();	//
+
+	m_debugDraw->BufferData();	// 
+
+
+
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_colorProgram.use();
@@ -254,6 +288,10 @@ void World::spawnAgent(int ID, int x, int y)
 	// generate agents
 	Agent* agent = new Agent(m_GA, m_b2world, ID, x, y);
 	m_agents.emplace_back(agent);
+
+	// generate agents
+	Agent* agent2 = new Agent(m_GA, m_b2world, ID, x, y);
+	m_agents.emplace_back(agent2);
 
 	// may only need to keep GA to recreated agent	
 }
@@ -550,7 +588,7 @@ void World::SelectAgentPartners() 	// takes list of fertile agents selects pairs
 
 		if (index != index2) {
 			GeneticAlgorithm* newGenome = CrossoverAgent(m_fertileAgentsSelection[offset], m_fertileAgentsSelection[offset2]); // cross over two agents
-			spawnAgent(newGenome, ++m_agentCount, 0, 0);	// spawn the new crossover agent
+			spawnAgent(newGenome, ++m_agentCount, 10, 10);	// spawn the new crossover agent
 			newAgents++;
 		}
 	}
@@ -568,7 +606,7 @@ void World::CreateSurvivingAgents()
 {
 	for (int i = 0; i < NUM_AGENT_POP * CULL_PERCENTAGE; i++) {
 		GeneticAlgorithm* GA = m_fertileAgentsSelection[i]->getGA();
-		spawnAgent(GA, m_fertileAgentsSelection[i]->getID(), 0, 0);
+		spawnAgent(GA, m_fertileAgentsSelection[i]->getID(), 10, 10);
 	}
 }
 
