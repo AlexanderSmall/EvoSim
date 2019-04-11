@@ -2,6 +2,9 @@
 
 #include <random>
 #include <ctime>
+#include <stdio.h>
+#include <stdio.h>
+#include <string>
 
 static const int NUM_AGENT_POP = 10;
 static const int MAX_AGENT_BODY_EDGES = 8;
@@ -31,10 +34,31 @@ struct LineChromes {
 	void setLimit(float limit) { this->limit = limit; };
 	void setWidth(float width) { this->width = width; };
 	void setLength(float length) { this->length = length; };
+
+	void addLine(LineChromes line) { lines.push_back(line); };
+
+	std::string toString() { return "a: " + std::to_string(this->angle)+ " li: " +
+		std::to_string(this->limit) + " w: " + std::to_string(this->width) + " le: " + std::to_string(this->length); };
+
+	void clearChromes() {
+		lines.clear();
+		this->angle = 0;
+		this->limit = 0;
+		this->width = 0;
+		this->length = 0;
+	}
 };
 
 struct AgentChromes {
 	std::vector<LineChromes> lines;
+
+	void addLine(LineChromes line) {
+		lines.push_back(line);
+	}
+
+	void clearChromes() {
+		lines.clear();
+	}
 };
 
 class GeneticAlgorithm
@@ -71,13 +95,18 @@ public:
 
 	void addAgentChromes(LineChromes line);
 
-	
+	LineChromes reconstructLineChromesomes(std::string chromes);
+	void reconstructAgentChromesomes(std::string chromes);
 
 	void resetDefinitions();
 
-	void OutputChromes(LineChromes chromes, int bodyCount);
+	void OutputChromes(LineChromes chromes, int bodyConnectionNum);
 
 	std::string FlattenChrome();
+
+
+	std::string SplitChromes(std::string a1, std::string a2);
+	std::string CreateCrossOverAgent(std::string a1, std::string a2);
 	void resetStringChrome();
 
 	int getSymmetrySize() { return m_symmetrySize; }

@@ -53,7 +53,7 @@ void Application::initWorld()
 
 void Application::gameLoop() {
 	odingine::FpsLimiter fpsLimiter; // create fps limiter
-	fpsLimiter.setMaxFPS(60.0f);
+	fpsLimiter.setMaxFPS(10.0f);
 
 	time_t startEpochTime = time(0);
 
@@ -89,8 +89,12 @@ void Application::gameLoop() {
 		} else {
 			// reset world
 
+			//m_world->flattenOne();
+			//m_world->reconstructChromes(); // remove
+
+
 			// Evole Agents
-			m_world->EvolveAgents();
+			m_world->EvolveAgents(); // UNCOMMENT
 
 			// increment epoch
 			m_world->incrementEpoch();

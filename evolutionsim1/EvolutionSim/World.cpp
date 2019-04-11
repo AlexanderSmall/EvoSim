@@ -28,10 +28,10 @@ std::discrete_distribution<int> MateSelectionDistrobution{ 4,4,4,3,3,3,3,2,1,1 }
 World::World(odingine::Window* window)  
 {
 	m_b2world = nullptr;
-
 	m_window = window;
 	// INIT SHADERS
 	initShaders();
+	// INIT WORLD
 	initWorld();
 }
 
@@ -44,7 +44,7 @@ void World::initWorld()
 		glGetAttribLocation(m_colorProgram.getProgramID(), pColourAttribName), 16, 0.f);
 
 	setFlags(true);
-	std::cout << m_debugDraw->GetFlags() << " - flags" << std::endl;
+	//std::cout << m_debugDraw->GetFlags() << " - flags" << std::endl;
 
 	createWorld();
 
@@ -52,7 +52,7 @@ void World::initWorld()
 
 	createTerrain();
 
-	distrobutionCheck();
+	//distrobutionCheck();
 
 	createAgents();
 
@@ -73,6 +73,19 @@ void World::setFlags(bool toggle)
 		uint32 flags = 0;
 		m_debugDraw->SetFlags(flags);
 	}
+}
+
+void World::reconstructChromes() // temp method
+{
+	//m_agents[0]->getGA()->reconstructAgentChromesomes();
+
+	//spawnAgent(m_agents[0]->getGA(), 0, 10, 10);
+}
+
+
+void World::flattenOne()
+{
+	m_agents[0]->getGA()->FlattenChrome();
 }
 
 void World::distrobutionCheck() 
@@ -289,10 +302,6 @@ void World::spawnAgent(int ID, int x, int y)
 	Agent* agent = new Agent(m_GA, m_b2world, ID, x, y);
 	m_agents.emplace_back(agent);
 
-	// generate agents
-	Agent* agent2 = new Agent(m_GA, m_b2world, ID, x, y);
-	m_agents.emplace_back(agent2);
-
 	// may only need to keep GA to recreated agent	
 }
 
@@ -413,7 +422,7 @@ void World::CalculateStatistics()
 	for (int i = 0; i < NUM_AGENT_POP; i++) {
 		varianceTotal += pow(m_agents[i]->getPosition().x - mean, 2);
 	}
-	variance = varianceTotal / NUM_AGENT_POP - 1;
+	variance = varianceTotal / (NUM_AGENT_POP - 1);
 
 	std::cout << "VARIANCE: " << variance << std::endl;
 
@@ -474,6 +483,7 @@ void World::sortAgents()
 
 void World::SelectFertileAgents() 
 {
+
 	// order agents based on x position	
 	sortAgents();
 
@@ -488,6 +498,8 @@ void World::SelectFertileAgents()
 	}
 	
 	// HOW TO CLEAR AGENTS CORRECTLY!?!?!
+
+
 	
 	clearAgents();	// clear the existing agents from m_agents and m_b2world
 	//clearAgents();
@@ -586,8 +598,14 @@ void World::SelectAgentPartners() 	// takes list of fertile agents selects pairs
 		//std::cout << "index1: " << index << std::endl;
 		//std::cout << "index2: " << index2 << std::endl;
 
-		if (index != index2) {
-			GeneticAlgorithm* newGenome = CrossoverAgent(m_fertileAgentsSelection[offset], m_fertileAgentsSelection[offset2]); // cross over two agents
+		if (index != index2) {	// check if the same agent has been choen twice
+			
+			// Bilateral crossover
+			//GeneticAlgorithm* newGenome = BilateralCrossoverAgent(m_fertileAgentsSelection[offset], m_fertileAgentsSelection[offset2]); // cross over two agents
+			// Arithmetic mean crossover
+			GeneticAlgorithm* newGenome = MeanCrossoverAgent(m_fertileAgentsSelection[offset], m_fertileAgentsSelection[offset2]); // cross over two agents
+
+			
 			spawnAgent(newGenome, ++m_agentCount, 10, 10);	// spawn the new crossover agent
 			newAgents++;
 		}
@@ -610,12 +628,19 @@ void World::CreateSurvivingAgents()
 	}
 }
 
-void World::MutateGenome()
-{
 
+GeneticAlgorithm* World::MeanCrossoverAgent(Agent* a1, Agent* a2)
+{
+	std::string a1Chrome = a1->getGA()->FlattenChrome();	// get string of chrome
+	std::string a2Chrome = a2->getGA()->FlattenChrome();
+
+	GeneticAlgorithm* GA = new GeneticAlgorithm();
+	GA->SplitChromes(a1Chrome, a2Chrome);
+
+	return GA;
 }
 
-GeneticAlgorithm* World::CrossoverAgent(Agent* a1, Agent* a2)
+GeneticAlgorithm* World::BilateralCrossoverAgent(Agent* a1, Agent* a2)
 {
 	// takes two agents and crosses their genome
 	

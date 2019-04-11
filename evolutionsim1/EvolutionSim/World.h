@@ -52,6 +52,9 @@ public:
 	void moveLeft();
 	void moveRight();
 
+	void reconstructChromes(); // remove
+
+	void flattenOne();
 
 	void initShaders();
 
@@ -90,7 +93,9 @@ public:
 
 	void CreateSurvivingAgents();
 	void MutateGenome();
-	GeneticAlgorithm* CrossoverAgent(Agent* a1, Agent* a2);
+
+	GeneticAlgorithm* MeanCrossoverAgent(Agent* a1, Agent* a2);
+	GeneticAlgorithm* BilateralCrossoverAgent(Agent* a1, Agent* a2);
 
 	void EvolveAgents();			// preform cross-over, mutation
 

@@ -123,8 +123,10 @@ struct AgentBuilder {
 		body->CreateFixture(&m_boxFixture);
 		m_agentParts.push_back(body);
 
-		for (auto&& sg : gm.lines) {
+		
 
+		for (auto&& sg : gm.lines) {
+			std::cout << "1" << std::endl;
 			auto line = createLines(sg);
 			float startAngle = sg.angle;
 			line->SetTransform({ sg.length, 0.0 }, startAngle);
@@ -142,6 +144,7 @@ struct AgentBuilder {
 
 		return body;
 	}
+
 };
 
 Agent::Agent(GeneticAlgorithm* GA, b2World* b2world, int ID, int x, int y) :
