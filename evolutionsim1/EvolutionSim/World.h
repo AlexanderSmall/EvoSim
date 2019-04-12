@@ -65,13 +65,18 @@ public:
 	void update();
 	void render();
 
+	void CreateOneAgent();
 
 	void createAgents();
+
+
+	void GenerateChromes();
+	void addAgentToWorld(int pos);
 
 	void spawnAgent(int ID, int x, int y);
 	void spawnAgent(GeneticAlgorithm* GA, int ID, int x, int y);
 
-	void clearAgents();
+	void clearAgents(int mode);
 
 	void setFlags(bool toggle);
 
@@ -99,8 +104,11 @@ public:
 
 	void EvolveAgents();			// preform cross-over, mutation
 
+	void saveAgentSore(int pos);
+
 	void incrementEpoch() { m_currentEpoch++; }
 
+	const int getNumAgents() { return NUM_AGENT_POP; }
 	//std::map<std::string, std::function<void()>> actions;
 
 private:
@@ -123,7 +131,8 @@ private:
 
 	// Agents
 	int m_agentCount = 0;
-
+	
+	// BUG: MAX CANNOT GO HIGHER THAN 60
 	static const int NUM_AGENT_POP = 60;	// MINIMUM POPULATION SIZE = 20
 	const float MUTATION_RATE = 0.05;
 	const float CULL_PERCENTAGE = 0.5;
@@ -132,9 +141,12 @@ private:
 	int m_maxAge = 20;
 
 	std::vector<Agent*> m_agents;	// holds current population of agents
+	std::vector<GeneticAlgorithm*> m_agentGenes;
 	static const int cullPop = (int)NUM_AGENT_POP * 0.5;
 	Agent* m_fertileAgentsSelection[cullPop];
 	Agent* m_fertileAgents[NUM_AGENT_POP];
+
+	float m_agentScores[NUM_AGENT_POP];
 
 	// Terrain
 	Terrain* m_terrain;

@@ -78,15 +78,46 @@ void GeneticAlgorithm::generateChromosomes()
 
 	int maxWheels = 1;
 	int numWheels = 0;
+	LineChromes line;
+	LineChromes finalLine;
+	//LineChromes line2;
 
 	//generate line chromes
-
-	auto lines = generateRandomInt(m_symmetrySize, m_symmetrySize);	// generate number of lines of symmetry of agent - default set to 2
+	//auto lines = generateRandomInt(m_symmetrySize, m_symmetrySize);	// generate number of lines of symmetry of agent - default set to 2
+	auto lines = generateRandomInt(2, 2);	// generate number of lines of symmetry of agent - default set to 2
 	while (lines-- > 0) {
 
-		m_wheelChromes.speed = generateRandomFloat(0.1f, 1.0f) * 20 + 10; 	// explaim why * 20 + 10
-		m_wheelChromes.radius = generateRandomFloat() + minWheelRadius;	// change to minWheel
+		//m_wheelChromes.speed = generateRandomFloat(0.1f, 1.0f) * 20 + 10; 	// explaim why * 20 + 10
+		//m_wheelChromes.radius = generateRandomFloat() + minWheelRadius;	// change to minWheel
 
+		/*
+		for (int i = 0; i < generateRandomInt(1, 2); i++)
+		{
+			for (int i = 0; i < generateRandomInt(1, 2); i++)
+			{
+				m_lineChromes.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+				m_lineChromes.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
+				m_lineChromes.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
+				m_lineChromes.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
+
+				line.addLine(m_lineChromes);
+			}
+			
+			line.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+			line.limit = generateRandomFloat(2.0f, 3.0f) * 0.05f * M_PI;
+			line.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + 0.05f;
+			line.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
+
+			finalLine.addLine(line);
+		}
+
+		//m_agentChromes.lines.push_back(finalLine);
+
+		//m_lineChromes.clearChromes();
+		//line.clearChromes();
+		//finalLine.clearChromes();
+		*/
+		
 		m_lineChromes.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
 		m_lineChromes.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
 		m_lineChromes.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
@@ -95,16 +126,23 @@ void GeneticAlgorithm::generateChromosomes()
 		// genreate wheel or line
 		if (generateRandomBool()) {
 			//m_lineChromes.wheel.push_back(m_wheelChromes);
-		} 
+		}
 		else {
 			//auto lines = generateRandomInt() - 1;	// determins how many line segments there are
 			//while (lines-- > 0) {					// while not created all line segments
 			m_lineChromes.lines.push_back(m_lineChromes);	// push line segment to line chromes
+			
+			//if (generateRandomInt(0, 10) < 5) {
+			//	m_lineChromes.lines.push_back(m_lineChromes);	// push line segment to line chromes
+			//}
 			//}
 		}
 
-		// create agent chromes - 
+		// create agent chromes -
 		m_agentChromes.lines.push_back(m_lineChromes);
+		//m_lineChromes.clearChromes();
+		
+
 	}
 	
 }	
@@ -222,7 +260,7 @@ void GeneticAlgorithm::reconstructAgentChromesomes(std::string chromes)
 
 	//std::cout << "Reconstricted:" << std::endl;
 	//std::cout << "\n========== recon START =============" << std::endl;
-	FlattenChrome();
+	//FlattenChrome();
 	//std::cout << "\n========== recon END =============" << std::endl;
 
 }
@@ -259,7 +297,7 @@ LineChromes GeneticAlgorithm::reconstructLineChromesomes(std::string chromes)
 			case 0:	// standard limb add - L
 				limb.clearChromes();	// clear any values
 				std::getline(stm, token, '\n');
-				std::cout << "\n" << std::endl;
+				//std::cout << "\n" << std::endl;
 				for (int i = 0; i < token.length(); i++) {
 					if (token.at(i) != ',') {	
 						var += token.at(i);
@@ -291,7 +329,7 @@ LineChromes GeneticAlgorithm::reconstructLineChromesomes(std::string chromes)
 
 				stack.push_back(limb);	// push new limb onto stack
 				limbCount++;	// increment number of limbs
-				std::cout << limb.toString() << std::endl;
+				//std::cout << limb.toString() << std::endl;
 
 
 				break;	// break first switch
@@ -337,7 +375,7 @@ LineChromes GeneticAlgorithm::reconstructLineChromesomes(std::string chromes)
 				}
 				stack.push_back(newLine); // push new line onto stack
 				limbCount = stack.size(); // reset limb count to 0
-				std::cout << newLine.toString() << std::endl;	// these are not printing
+				//std::cout << newLine.toString() << std::endl;	// these are not printing
 
 
 				break;	// break first switch

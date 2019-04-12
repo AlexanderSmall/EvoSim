@@ -52,7 +52,7 @@ struct AgentBuilder {
 		// perhaps use these are chromes as well
 		m_boxFixture.shape = &m_boxShape;
 		m_boxFixture.density = 2000.0f;
-		m_boxFixture.friction = 1.0f;
+		m_boxFixture.friction = 0.1f;
 		m_boxFixture.filter.groupIndex = -1;
 
 		m_boxBody.type = b2_dynamicBody;
@@ -64,7 +64,7 @@ struct AgentBuilder {
 
 		//m_lineJoint.enableLimit = true;
 		m_lineJoint.enableMotor = true;
-		m_lineJoint.maxMotorTorque = 5000;
+		m_lineJoint.maxMotorTorque = 9000;
 	}
 
 	b2Body* createLines(LineChromes const & gm) {
@@ -126,7 +126,6 @@ struct AgentBuilder {
 		
 
 		for (auto&& sg : gm.lines) {
-			std::cout << "1" << std::endl;
 			auto line = createLines(sg);
 			float startAngle = sg.angle;
 			line->SetTransform({ sg.length, 0.0 }, startAngle);

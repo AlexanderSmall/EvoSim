@@ -53,54 +53,65 @@ void Application::initWorld()
 
 void Application::gameLoop() {
 	odingine::FpsLimiter fpsLimiter; // create fps limiter
-	fpsLimiter.setMaxFPS(10.0f);
+	fpsLimiter.setMaxFPS(60.0f);
 
 	time_t startEpochTime = time(0);
+	int agentCount = 0;
+	int numAgents = m_world->getNumAgents();	// get the number of agents in the world
+	bool epochComplete;
+	bool epochNumber = 0;
 
-	double beforeRender = 0;
-	double timeToRender = 0;
 	// Implement Fixed Time Step
 	while (m_gameState == GameState::PLAY) {
 
-		fpsLimiter.begin();		// begin fps counter
-		double seconds = difftime(time(0), startEpochTime);
 
 		//beforeRender = time(0);
 		//timeToRender = difftime(time(0), beforeRender);
 		//seconds -= timeToRender;
+		m_world->addAgentToWorld(agentCount);  // spawn first agent
 
-		if (seconds < 100.0f) {	
+		while (agentCount < numAgents) {
+			fpsLimiter.begin();		// begin fps counter
+			double seconds = difftime(time(0), startEpochTime);
 
+			if (seconds < 1.0f) {
+				m_world->update();      // update Box2D world
+				m_world->render(); 		// draw world
+			
+				processInput();			// process the users input
+				checkUserInput();
 
+				m_fps = fpsLimiter.end();		// end fps counter
+				if (m_fpsToggle) std::cout << "fps: " << m_fps << std::endl;
 
-			m_world->update();      // update Box2D world
+			}
+			else {
 
+				// can't use clear agent here because we need all agents. - some how only need one agent at a time.
 
-			m_world->render(); 		// draw world
+				m_world->saveAgentSore(agentCount);	// save the score of the agent
+				m_world->clearAgents(1);		// clear the current agent
+				
+				agentCount++;	// increment agent count
+				if (agentCount < numAgents) {
+					m_world->addAgentToWorld(agentCount);  // create next agent
+				}
+				
+				startEpochTime = time(0);	// reset timer
+				std::cout << agentCount << std::endl;
+				
+			}
 
-
-			processInput();			// process the users input
-			checkUserInput();
-
-			m_fps = fpsLimiter.end();		// end fps counter
-			if (m_fpsToggle) std::cout << "fps: " << m_fps << std::endl;
-
-
-		} else {
-			// reset world
-
-			//m_world->flattenOne();
-			//m_world->reconstructChromes(); // remove
-
-
-			// Evole Agents
-			m_world->EvolveAgents(); // UNCOMMENT
-
-			// increment epoch
-			m_world->incrementEpoch();
-
-			startEpochTime = time(0);	// reset timer
 		}
+		// Reset world
+		// Evole Agents
+		m_world->EvolveAgents();
+
+		// increment epoch
+		m_world->incrementEpoch();
+
+		agentCount = 0;	// reset agent count to 0
+
 	}
 
 }
@@ -138,7 +149,7 @@ void Application::checkUserInput()
 	}
 
 	if (m_inputManager.isKeyDown(SDLK_t)) {	// clear all agents from the world
-		m_world->clearAgents();
+		m_world->clearAgents(0);
 	}
 
 	if (m_inputManager.isKeyDown(SDLK_g)) {	// add one agent at 10, 10

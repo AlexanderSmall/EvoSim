@@ -54,8 +54,13 @@ void World::initWorld()
 
 	//distrobutionCheck();
 
-	createAgents();
+	GenerateChromes();
 
+	// parallel agent - max populationsize of 60
+	//createAgents();
+
+	// serial agent - max population of --
+	//CreateOneAgent(); // spawn the first agent
 
 }
 
@@ -146,21 +151,42 @@ void World::createWorld() {
 
 }
 
+void World::CreateOneAgent()
+{
+	int x = 0;
+	int y = 10;
+
+	spawnAgent(++m_agentCount, x, y);
+}
+
 void World::createAgents()
 {
 	int x = 0;
-	int y = 0;
+	int y = 10;
 
 	for (int i = 0; i < NUM_AGENT_POP; i++) {
-		spawnAgent(++m_agentCount, 10, 10);
+		spawnAgent(++m_agentCount, x, y);
 	}
+}
+void World::GenerateChromes()
+{
+	for (int i = 0; i < NUM_AGENT_POP; i++) {
+		GeneticAlgorithm* m_GA = new GeneticAlgorithm();
+		m_GA->generateChromosomes();
+		m_agentGenes.push_back(m_GA);
+	}
+}
+
+void World::addAgentToWorld(int pos)
+{
+	spawnAgent(m_agentGenes.at(pos), ++m_agentCount, 0, 10);
 }
 
 void World::createTerrain() {
 	m_terrain = new Terrain(m_b2world);
 	//m_terrain->CreateHillTerrain();
-	//m_terrain->CreateRoughTerrain();
-	m_terrain->CreateFlatTerrain();
+	m_terrain->CreateRoughTerrain();
+	//m_terrain->CreateFlatTerrain();
 
 	m_terrain->saveTerrain();
 }
@@ -294,15 +320,11 @@ void World::spawnAgent(int ID, int x, int y)
 	GeneticAlgorithm* m_GA = new GeneticAlgorithm();
 	m_GA->generateChromosomes();
 
-	//std::cout << "...... \n ....... \n ...... \n" << std::endl;
-	//m_GA->outputAgentChromes();
-	//m_GA->FlattenChrome();
-
-	// generate agents
+	// generate agent
 	Agent* agent = new Agent(m_GA, m_b2world, ID, x, y);
 	m_agents.emplace_back(agent);
 
-	// may only need to keep GA to recreated agent	
+
 }
 
 void World::spawnAgent(GeneticAlgorithm* GA, int ID, int x, int y)	// spawn agent with GA chromes
@@ -312,7 +334,7 @@ void World::spawnAgent(GeneticAlgorithm* GA, int ID, int x, int y)	// spawn agen
 	m_agents.emplace_back(agent);
 }
 
-void World::clearAgents() 
+void World::clearAgents(int mode) 
 {
 	/*
 	for (int i = 0; i < m_agents.size(); i++) {
@@ -361,8 +383,13 @@ void World::clearAgents()
 		}
 	}*/
 
+	if (mode == 0) {
+		m_agents.clear();
+		m_agentGenes.clear();
+	}
+	else if (mode == 1) {
 
-	m_agents.clear();
+	}
 
 
 	//std::cout << "agents remaining: " << m_b2world->GetBodyCount() << std::endl;
@@ -391,7 +418,7 @@ void World::OutputAgentChromes()
 void World::OutputAgentID()
 {
 	for (int i = 0; i < m_agents.size(); i++) {
-		std::cout << "Position [" << i << "] - Agent:" << m_agents[i]->getID() << " Distance x: " << m_agents[i]->getPosition().x << std::endl;
+		std::cout << "Position [" << i << "] - Agent:" << m_agents[i]->getID() << " Distance x: " << m_agentScores[i] << std::endl;
 	}
 }
 
@@ -402,27 +429,42 @@ void World::CalculateStatistics()
 
 	float totalDistance = 0;
 	for (int i = 0; i < NUM_AGENT_POP; i++) {
-		int distance = m_agents[i]->getPosition().x;
+		int distance = m_agentScores[i];
 		totalDistance += distance;
 	}
-	float mean = totalDistance / NUM_AGENT_POP;
+
+	float mean;
+	if (totalDistance != 0) 
+	{ 
+		mean = totalDistance / NUM_AGENT_POP;
+	}
+	else { 
+		mean = 1; 
+	}
 
 
 	std::cout << "EPOCH: " << m_currentEpoch << std::endl;
-	std::cout << "BEST AGENT: " << m_agents[0]->getPosition().x << std::endl;
-	std::cout << "WORST AGENT: " << m_agents[NUM_AGENT_POP - 1]->getPosition().x << std::endl;
+	std::cout << "BEST AGENT: " << m_agentScores[0] << std::endl;
+	std::cout << "WORST AGENT: " << m_agentScores[NUM_AGENT_POP - 1] << std::endl;
 	std::cout << "MEAN: " << mean << std::endl;
 
 	int medianIndex = (int) NUM_AGENT_POP / 2;
-	std::cout << "MEDIAN: " << m_agents[medianIndex]->getPosition().x << std::endl;
+	std::cout << "MEDIAN: " << m_agentScores[medianIndex] << std::endl;
 
 	// calculate variance
-	float variance;
 	float varianceTotal = 0;
 	for (int i = 0; i < NUM_AGENT_POP; i++) {
-		varianceTotal += pow(m_agents[i]->getPosition().x - mean, 2);
+		varianceTotal += pow(m_agentScores[i] - mean, 2);
 	}
-	variance = varianceTotal / (NUM_AGENT_POP - 1);
+	float variance;
+	if (totalDistance != 0)
+	{
+		variance = varianceTotal / (NUM_AGENT_POP - 1);
+	}
+	else {
+		variance = 1;
+	}
+	
 
 	std::cout << "VARIANCE: " << variance << std::endl;
 
@@ -439,8 +481,8 @@ void World::CalculateStatistics()
 	// save values to file
 	std::ofstream file;
 	file.open("statData.txt", std::ofstream::out | std::ios_base::app);
-	file << m_currentEpoch << "," << m_agents[0]->getPosition().x << "," << m_agents[NUM_AGENT_POP - 1]->getPosition().x << "," 
-		<< mean << "," << m_agents[medianIndex]->getPosition().x << "," << variance << "," << stdv << std::endl;
+	file << m_currentEpoch << "," << m_agentScores[0] << "," << m_agentScores[NUM_AGENT_POP - 1] << "," 
+		<< mean << "," << m_agentScores[medianIndex] << "," << variance << "," << stdv << std::endl;
 	file.close();
 
 	//std::ofstream file;
@@ -449,6 +491,11 @@ void World::CalculateStatistics()
 
 
 
+}
+
+void World::saveAgentSore(int pos)
+{
+	m_agentScores[pos] = m_agents[pos]->getPosition().x;
 }
 
 void World::incrementAgentAge()
@@ -463,18 +510,28 @@ void World::sortAgents()
 	// simple bubble sort to order agents based on x position
 	for (int i = 0; i < m_agents.size() - 1; i++) {
 		for (int j = 0; j < m_agents.size() - i - 1; j++) {
-			if (m_agents[j]->getPosition().x < m_agents[j + 1]->getPosition().x) {
+			//if (m_agents[j]->getPosition().x < m_agents[j + 1]->getPosition().x) {
+			if (m_agentScores[j] < m_agentScores[j + 1]) {
+
+
 				//swap(m_agents[j], m_agents[j + 1]);
 				Agent* temp = m_agents[j];
 				m_agents[j] = m_agents[j + 1];
 				m_agents[j + 1] = temp;
+
+				float temp2 = m_agentScores[j];
+				m_agentScores[j] = m_agentScores[j + 1];
+				m_agentScores[j + 1] = temp2;
+
+
+
 			}
 		}
 	}
 
 	// print sorted list
 	for (int i = 0; i < m_agents.size(); i++) {
-		//std::cout << "x pos: " << m_agents[i]->getPosition().x << std::endl;
+		std::cout << "x pos: " << m_agentScores[i] << std::endl;
 	}
 
 
@@ -487,7 +544,7 @@ void World::SelectFertileAgents()
 	// order agents based on x position	
 	sortAgents();
 
-	OutputAgentID();
+	OutputAgentID();	
 
 	CalculateStatistics();	// calculate statistics on population
 
@@ -499,16 +556,7 @@ void World::SelectFertileAgents()
 	
 	// HOW TO CLEAR AGENTS CORRECTLY!?!?!
 
-
-	
-	clearAgents();	// clear the existing agents from m_agents and m_b2world
-	//clearAgents();
-	//clearAgents();
-	//clearAgents();
-	//clearAgents();
-
-
-
+	clearAgents(0);	// clear the existing agents from m_agents and m_b2world
 
 	// kill 50 agents (1/2 of agents)
 	// if agent age over x amount then destroy first
@@ -605,8 +653,8 @@ void World::SelectAgentPartners() 	// takes list of fertile agents selects pairs
 			// Arithmetic mean crossover
 			GeneticAlgorithm* newGenome = MeanCrossoverAgent(m_fertileAgentsSelection[offset], m_fertileAgentsSelection[offset2]); // cross over two agents
 
-			
-			spawnAgent(newGenome, ++m_agentCount, 10, 10);	// spawn the new crossover agent
+			m_agentGenes.push_back(newGenome); // add genome to agent
+			//spawnAgent(newGenome, ++m_agentCount, 10, 10);	// spawn the new crossover agent
 			newAgents++;
 		}
 	}
@@ -624,7 +672,8 @@ void World::CreateSurvivingAgents()
 {
 	for (int i = 0; i < NUM_AGENT_POP * CULL_PERCENTAGE; i++) {
 		GeneticAlgorithm* GA = m_fertileAgentsSelection[i]->getGA();
-		spawnAgent(GA, m_fertileAgentsSelection[i]->getID(), 10, 10);
+		//spawnAgent(GA, m_fertileAgentsSelection[i]->getID(), 10, 10);
+		m_agentGenes.push_back(GA);
 	}
 }
 
@@ -683,6 +732,7 @@ GeneticAlgorithm* World::BilateralCrossoverAgent(Agent* a1, Agent* a2)
 
 void World::EvolveAgents() 
 {
+	std::cout << "e0" << std::endl;
 	SelectFertileAgents();
 }
 
