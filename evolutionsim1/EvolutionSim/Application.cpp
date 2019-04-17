@@ -60,11 +60,13 @@ void Application::gameLoop() {
 	int numAgents = m_world->getNumAgents();	// get the number of agents in the world
 	bool epochComplete;
 	bool epochNumber = 0;
+	bool skipAgent = false;
+	int doomedCount = 0;
+	bool initialPop = true;
+
 
 	// Implement Fixed Time Step
 	while (m_gameState == GameState::PLAY) {
-
-
 		//beforeRender = time(0);
 		//timeToRender = difftime(time(0), beforeRender);
 		//seconds -= timeToRender;
@@ -72,37 +74,55 @@ void Application::gameLoop() {
 
 		while (agentCount < numAgents) {
 			fpsLimiter.begin();		// begin fps counter
-			double seconds = difftime(time(0), startEpochTime);
+			seconds = difftime(time(0), startEpochTime);
 
-			if (seconds < 1.0f) {
+			if (seconds < fitnessTime && skipAgent == false) {
 				m_world->update();      // update Box2D world
 				m_world->render(); 		// draw world
 			
 				processInput();			// process the users input
 				checkUserInput();
 
+				if (m_world->checkAgentMoving(agentCount, seconds)) {	// if agent motionless then remove and add new
+					if (initialPop) {	// if its the inital population then regenerate an agent
+						m_world->clearAgents(1);		// clear the current agent
+						m_world->RegenerateChromes(agentCount);
+						startEpochTime = time(0);	// reset timer
+						//doomedCount++;
+						//std::cout << "doomed: " << doomedCount << std::endl;
+					}
+					else {
+						//skipAgent = true;	// uncomment for removal of agents after the inital population - may cause inconsistent results but increases speed
+					}
+					
+				}
+
 				m_fps = fpsLimiter.end();		// end fps counter
 				if (m_fpsToggle) std::cout << "fps: " << m_fps << std::endl;
 
 			}
 			else {
-
+				skipAgent = false;
 				// can't use clear agent here because we need all agents. - some how only need one agent at a time.
 
 				m_world->saveAgentSore(agentCount);	// save the score of the agent
 				m_world->clearAgents(1);		// clear the current agent
 				
+				///////////////////////////////////////////////////////////
+				///  make it so when an agent is shit just add another ///
+
 				agentCount++;	// increment agent count
 				if (agentCount < numAgents) {
 					m_world->addAgentToWorld(agentCount);  // create next agent
+					std::cout << "new agent: " << agentCount << std::endl;
 				}
 				
 				startEpochTime = time(0);	// reset timer
-				std::cout << agentCount << std::endl;
 				
 			}
 
 		}
+		initialPop = false;
 		// Reset world
 		// Evole Agents
 		m_world->EvolveAgents();
@@ -154,6 +174,7 @@ void Application::checkUserInput()
 
 	if (m_inputManager.isKeyDown(SDLK_g)) {	// add one agent at 10, 10
 		m_world->spawnAgent(-1, 10, 10);
+		SDL_Delay(200);
 	}
 
 	if (m_inputManager.isKeyDown(SDLK_z)) {	// Zoom in
@@ -172,6 +193,15 @@ void Application::checkUserInput()
 		m_world->moveRight();
 	}
 
+	if (m_inputManager.isKeyDown(SDLK_o)) {	// Zoom out
+		fitnessTime = 1000000;
+	}
+
+	if (m_inputManager.isKeyDown(SDLK_m)) {	// Zoom out
+		//if (floor(seconds) == seconds) {
+			std::cout << "s: " << seconds << std::endl;
+		//}
+	}
 
 }
 
@@ -179,7 +209,6 @@ void Application::updateAgents()
 {
 	
 }
-
 
 void Application::processInput() {
 	SDL_Event evnt;

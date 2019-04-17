@@ -17,6 +17,7 @@
 static std::random_device rd; // random device engine, usually based on /dev/random on UNIX-like systems
 // initialize Mersennes' twister using rd to generate the seed
 std::mt19937 m_RandEng(rd());
+std::discrete_distribution<int> limbs{10,2,1};
 
 GeneticAlgorithm::GeneticAlgorithm()
 {
@@ -78,8 +79,10 @@ void GeneticAlgorithm::generateChromosomes()
 
 	int maxWheels = 1;
 	int numWheels = 0;
-	LineChromes line;
-	LineChromes finalLine;
+	LineChromes line1;
+	LineChromes line2;
+	LineChromes line3;
+	LineChromes line4;
 	//LineChromes line2;
 
 	//generate line chromes
@@ -89,35 +92,101 @@ void GeneticAlgorithm::generateChromosomes()
 
 		//m_wheelChromes.speed = generateRandomFloat(0.1f, 1.0f) * 20 + 10; 	// explaim why * 20 + 10
 		//m_wheelChromes.radius = generateRandomFloat() + minWheelRadius;	// change to minWheel
+		int r0 = limbs(rd);
+		int r1 = limbs(rd);
+		int r2 = limbs(rd);
+		int r3 = limbs(rd);
+			
+		line1.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+		line1.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
+		line1.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
+		line1.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
 
-		/*
-		for (int i = 0; i < generateRandomInt(1, 2); i++)
-		{
-			for (int i = 0; i < generateRandomInt(1, 2); i++)
+		line2.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+		line2.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
+		line2.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
+		line2.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
+
+		line3.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+		line3.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
+		line3.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
+		line3.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
+
+			for (int i = 0; i < r1; i++)
 			{
 				m_lineChromes.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
 				m_lineChromes.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
 				m_lineChromes.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
 				m_lineChromes.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
 
-				line.addLine(m_lineChromes);
+				line1.addLine(m_lineChromes);
 			}
-			
-			line.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
-			line.limit = generateRandomFloat(2.0f, 3.0f) * 0.05f * M_PI;
-			line.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + 0.05f;
-			line.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
 
-			finalLine.addLine(line);
-		}
+			for (int i = 0; i < r2; i++)
+			{
+				m_lineChromes.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+				m_lineChromes.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
+				m_lineChromes.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
+				m_lineChromes.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
+
+				line2.addLine(m_lineChromes);
+			}
+
+			for (int i = 0; i < r3; i++)
+			{
+				m_lineChromes.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+				m_lineChromes.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
+				m_lineChromes.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
+				m_lineChromes.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
+
+				line3.addLine(m_lineChromes);
+			}
+
+			line4.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+			line4.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
+			line4.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
+			line4.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
+		
+			int num = generateRandomInt(0, 2);
+			switch (r0) {
+				case 0:
+					line4.addLine(line1);
+					break;
+
+				case 1:
+					line4.addLine(line1);
+					line4.addLine(line2);
+					break;
+
+				case 2:
+					line4.addLine(line1);
+					line4.addLine(line2);
+					line4.addLine(line3);
+					break;
+			}
+
+			
+
+			m_agentChromes.addLine(line4);
+
+			line1.clearChromes();
+			line2.clearChromes();
+			line3.clearChromes();
+			line4.clearChromes();
+
+
+
+			
+		
 
 		//m_agentChromes.lines.push_back(finalLine);
 
 		//m_lineChromes.clearChromes();
 		//line.clearChromes();
 		//finalLine.clearChromes();
-		*/
 		
+		
+		/*
 		m_lineChromes.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
 		m_lineChromes.limit = generateRandomFloat(2.0f, 3.0f) * min * M_PI;
 		m_lineChromes.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + min;
@@ -142,8 +211,8 @@ void GeneticAlgorithm::generateChromosomes()
 		m_agentChromes.lines.push_back(m_lineChromes);
 		//m_lineChromes.clearChromes();
 		
-
-	}
+		*/
+	} 
 	
 }	
 
@@ -524,6 +593,49 @@ std::string GeneticAlgorithm::CreateCrossOverAgent(std::string a1, std::string a
 void GeneticAlgorithm::resetStringChrome()
 {
 	m_stringChromes = "";
+}
+
+bool GeneticAlgorithm::MutateMorphology(LineChromes line, int path)
+{
+
+	if (line.lines.size() == 0) {	// if a leaf node
+		if (generateRandomBool()) {
+			LineChromes newLine;
+			newLine.angle = generateRandomFloat(2.0f, 3.0f) * 2 * M_PI;
+			newLine.limit = generateRandomFloat(2.0f, 3.0f) * 0.05 * M_PI;
+			newLine.width = generateRandomFloat(3.0f, 4.0f) * 0.2f + 0.05;
+			newLine.length = generateRandomFloat(0.5f, 3.0f) * 5 + 1;
+
+			line.lines.emplace_back(newLine);
+		}
+		else {
+			return true;
+		}
+	}
+	else {
+		int path = generateRandomInt(0, line.lines.size() - 1);
+		if (MutateMorphology(line.lines.at(path), path)) {
+			std::cout << "delete hit" << std::endl;
+			line.lines.erase(line.lines.begin() + path);
+		}
+	}
+}
+
+void GeneticAlgorithm::MutateMorphologyJoin()
+{
+
+	if (generateRandomInt(1, 50) == 1) {
+		std::cout << "hit mutate morphology" << std::endl;
+		if (generateRandomBool()) {
+			MutateMorphology(m_agentChromes.lines.at(0), 0);
+		}
+		else {
+			MutateMorphology(m_agentChromes.lines.at(1), 0);
+		}
+	}
+
+	std::cout << "remove: " << remove << std::endl;
+
 }
 
 void GeneticAlgorithm::MutateGenome(LineChromes chromes, int bodyCount)

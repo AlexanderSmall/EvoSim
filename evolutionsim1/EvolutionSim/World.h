@@ -62,6 +62,8 @@ public:
 
 	void FollowBestAgent();
 
+	bool checkAgentMoving(int pos, float second);
+
 	void update();
 	void render();
 
@@ -70,6 +72,7 @@ public:
 	void createAgents();
 
 
+	void RegenerateChromes(int pos);
 	void GenerateChromes();
 	void addAgentToWorld(int pos);
 
@@ -97,7 +100,7 @@ public:
 	void SelectAgentPartners();
 
 	void CreateSurvivingAgents();
-	void MutateGenome();
+	void MutateAgent(GeneticAlgorithm* newGenome);
 
 	GeneticAlgorithm* MeanCrossoverAgent(Agent* a1, Agent* a2);
 	GeneticAlgorithm* BilateralCrossoverAgent(Agent* a1, Agent* a2);
@@ -115,8 +118,8 @@ private:
 
 	void createTerrain();
 
-	const float GRAVITY = -15.0f;
-	static const int ITERATIONS = 30;
+	const float GRAVITY = -9.81;
+	static const int ITERATIONS = 20;
 
 	b2World* m_b2world;
 
@@ -133,9 +136,9 @@ private:
 	int m_agentCount = 0;
 	
 	// BUG: MAX CANNOT GO HIGHER THAN 60
-	static const int NUM_AGENT_POP = 60;	// MINIMUM POPULATION SIZE = 20
+	static const int NUM_AGENT_POP = 60;	// MINIMUM POPULATION SIZE = 20 max = unlimited
 	const float MUTATION_RATE = 0.05;
-	const float CULL_PERCENTAGE = 0.5;
+	const float CULL_PERCENTAGE = 0.5;		// usually set to 1/5 - 0.2
 
 	int m_currentEpoch = 0;
 	int m_maxAge = 20;
@@ -147,6 +150,9 @@ private:
 	Agent* m_fertileAgents[NUM_AGENT_POP];
 
 	float m_agentScores[NUM_AGENT_POP];
+
+	float m_agentPositions[5];
+	int samplePos = 1;
 
 	// Terrain
 	Terrain* m_terrain;

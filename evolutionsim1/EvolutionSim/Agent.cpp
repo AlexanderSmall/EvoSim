@@ -29,7 +29,7 @@ struct AgentBuilder {
 
 	b2RevoluteJointDef m_motor;
 	b2RevoluteJointDef m_lineJoint;
-
+	
 	AgentBuilder(b2World& b2world, GeneticAlgorithm &GA, int x, int y) : m_b2world(b2world), m_GA(GA) {
 
 		m_wheelFixture.shape = &m_wheelShape;
@@ -64,7 +64,7 @@ struct AgentBuilder {
 
 		//m_lineJoint.enableLimit = true;
 		m_lineJoint.enableMotor = true;
-		m_lineJoint.maxMotorTorque = 9000;
+		m_lineJoint.maxMotorTorque = 6000;
 	}
 
 	b2Body* createLines(LineChromes const & gm) {

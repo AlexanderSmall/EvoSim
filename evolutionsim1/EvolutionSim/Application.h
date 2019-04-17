@@ -48,14 +48,6 @@ public:
 
 	void initWorld();
 
-	void initRender();
-
-	// initializes level
-	void initLevel();
-
-	/// Initializes the shaders
-	void initShaders();
-
 	/// Main game loop for the program
 	void gameLoop();
 
@@ -64,12 +56,10 @@ public:
 	// update agents
 	void updateAgents();
 
-	void updateWorld();
 
 	/// Handles input processing
 	void processInput();
 	/// Renders the game
-	void drawGame();
 
 private:
 	/// Member Variables
@@ -84,6 +74,10 @@ private:
 	bool m_renderToggle = false;
 	bool m_fpsToggle = false;
 	bool m_followBestAgentToggle = false;
+
+	float fitnessTime = 30;
+
+	float seconds = 0;
 
 	//int m_currentLevel;
 

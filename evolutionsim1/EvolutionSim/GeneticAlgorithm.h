@@ -35,7 +35,7 @@ struct LineChromes {
 	void setWidth(float width) { this->width = width; };
 	void setLength(float length) { this->length = length; };
 
-	void addLine(LineChromes line) { lines.push_back(line); };
+	void addLine(LineChromes line) { lines.emplace_back(line); };
 
 	std::string toString() { return "a: " + std::to_string(this->angle)+ " li: " +
 		std::to_string(this->limit) + " w: " + std::to_string(this->width) + " le: " + std::to_string(this->length); };
@@ -53,7 +53,7 @@ struct AgentChromes {
 	std::vector<LineChromes> lines;
 
 	void addLine(LineChromes line) {
-		lines.push_back(line);
+		lines.emplace_back(line);
 	}
 
 	void clearChromes() {
@@ -90,6 +90,9 @@ public:
 
 	void outputAgentChromes();
 
+
+	void MutateMorphologyJoin();
+	bool MutateMorphology(LineChromes line, int path);
 	void MutateGenome(LineChromes chromes, int bodyCount);
 	void SearchAgentChromes();
 
@@ -112,7 +115,12 @@ public:
 	int getSymmetrySize() { return m_symmetrySize; }
 	void setSymmetrySize(int symm) { m_symmetrySize = symm; }
 
+	int getID() { return ID; };
+	void setID(int id) { ID = id; }
+
 private:
+
+	int ID = -1;
 
 	int RANDOM_ENGINE_SEED;
 
@@ -137,9 +145,11 @@ private:
 	// line (body) chromes
 	LineChromes m_lineChromes;
 
+	bool remove = false;
+
 	// NOTE :: CREATE GNOME CONVENIENT FOR BREEDING/EVOLUTION
 	// convert Agent chromes to linear vector - how to convert back into agent? maybe not
-	// need to work out how to traverse Agent chromes - use recurrsion 
+	// traverse Agent chromes - use recurrsion 
 
 
 

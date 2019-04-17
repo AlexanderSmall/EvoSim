@@ -17,7 +17,7 @@ const int GRAVITY = -9.81;
 std::default_random_engine generator;
 
 int fertileSize = (int)NUM_AGENT_POP * 0.5;	// calculate and cast fertileSize to int
-std::discrete_distribution<int> CullDistribution{ 1,1,2,2,3,3,4,4,5,5 };
+std::discrete_distribution<int> CullDistribution{ 1,2,3,4,5,6,7,8,9,10 };
 //std::discrete_distribution<int> CullDistribution{ 1,1,2,2,3,3,3,3,3,3 };
 std::discrete_distribution<int> MateSelectionDistrobution{ 4,4,4,3,3,3,3,2,1,1 };
 
@@ -52,7 +52,7 @@ void World::initWorld()
 
 	createTerrain();
 
-	//distrobutionCheck();
+	distrobutionCheck();
 
 	GenerateChromes();
 
@@ -87,6 +87,54 @@ void World::reconstructChromes() // temp method
 	//spawnAgent(m_agents[0]->getGA(), 0, 10, 10);
 }
 
+bool World::checkAgentMoving(int pos, float second)
+{
+	// collect samples
+	int num = floor(second) + 1; // + 1 to avoid zero errors
+	if (num % samplePos == samplePos - 1) {
+		//m_agentPositions.emplace_back(m_agents[pos]->getPosition().x);
+		m_agentPositions[samplePos - 1] = m_agents[pos]->getPosition().x;
+		
+		if (samplePos != 5) {
+			samplePos++;
+		}
+		else {
+			samplePos = 1;
+		}
+	}
+
+
+	// check they have moved past x = 30 within 5 seconds
+	if (floor(second) >= 5) {
+		if (m_agents[pos]->getPosition().x < 0) {
+			m_agentScores[pos] = -1000;
+			return true;
+		}
+
+		//calucltae mean of samples
+		float sum = 0;
+		for (int i = 0; i < 5; i++) {
+			sum += m_agentPositions[i];
+		}
+		float mean = sum / 5;
+
+		// calculate variance
+		float varianceTotal = 0;
+		for (int i = 0; i < 5; i++) {
+			varianceTotal += pow(m_agentPositions[i] - mean, 2);
+		}
+
+		float variance;
+		variance = varianceTotal / (5 - 1);
+
+		if (variance <= 0.01)
+		{
+			return true;
+		}
+		//std::cout << "variance: " << variance << std::endl;
+	}
+	return false;
+}
 
 void World::flattenOne()
 {
@@ -96,6 +144,17 @@ void World::flattenOne()
 void World::distrobutionCheck() 
 {	// method to test distrobution of random variables
 	
+	std::cout << "l" << std::endl;
+	std::cout << "16.0334185,0.4182115,0.8255545,12.160624" << std::endl;
+	std::cout << "j" << std::endl;
+	std::cout << "16.0334185,0.4182115,0.8255545,12.160624" << std::endl;
+	std::cout << "b" << std::endl;
+	std::cout << "l" << std::endl;
+	std::cout << "16.0334185,0.4182115,0.8255545,12.160624" << std::endl;
+	std::cout << "j" << std::endl;
+	std::cout << "16.7218455,0.3767910,0.822672,10.2854565" << std::endl;
+	std::cout << "b" << std::endl;
+
 	int distrobution[10];
 
 	for (int i = 0; i < 10; i++) {
@@ -168,25 +227,38 @@ void World::createAgents()
 		spawnAgent(++m_agentCount, x, y);
 	}
 }
+
+void World::RegenerateChromes(int pos)
+{
+	int agentID = m_agentGenes[pos]->getID();
+
+	GeneticAlgorithm* GA = new GeneticAlgorithm();
+	GA->generateChromosomes();
+	m_agentGenes[pos] = GA;
+	Agent* agent = new Agent(GA, m_b2world, agentID, 0, 10);
+}
+
 void World::GenerateChromes()
 {
 	for (int i = 0; i < NUM_AGENT_POP; i++) {
 		GeneticAlgorithm* m_GA = new GeneticAlgorithm();
 		m_GA->generateChromosomes();
+		m_GA->setID(i);
 		m_agentGenes.push_back(m_GA);
+		m_agentCount++;
 	}
 }
 
 void World::addAgentToWorld(int pos)
 {
-	spawnAgent(m_agentGenes.at(pos), ++m_agentCount, 0, 10);
+	spawnAgent(m_agentGenes.at(pos), m_agentGenes.at(pos)->getID(), 0, 10);
 }
 
 void World::createTerrain() {
 	m_terrain = new Terrain(m_b2world);
 	//m_terrain->CreateHillTerrain();
-	m_terrain->CreateRoughTerrain();
-	//m_terrain->CreateFlatTerrain();
+	//m_terrain->CreateRoughTerrain();
+	m_terrain->CreateFlatTerrain();
 
 	m_terrain->saveTerrain();
 }
@@ -289,9 +361,6 @@ void World::render()
 	m_b2world->DrawDebugData();	//
 
 	m_debugDraw->BufferData();	// 
-
-
-
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -418,7 +487,7 @@ void World::OutputAgentChromes()
 void World::OutputAgentID()
 {
 	for (int i = 0; i < m_agents.size(); i++) {
-		std::cout << "Position [" << i << "] - Agent:" << m_agents[i]->getID() << " Distance x: " << m_agentScores[i] << std::endl;
+		std::cout << "Position [" << i << "] - Agent:" << m_agents[i]->getGA()->getID() << " Distance x: " << m_agentScores[i] << std::endl;
 	}
 }
 
@@ -553,9 +622,6 @@ void World::SelectFertileAgents()
 	for (int i = 0; i < m_agents.size(); i++) {	
 		m_fertileAgents[i] = m_agents[i];	// transfer agent data to array datatype
 	}
-	
-	// HOW TO CLEAR AGENTS CORRECTLY!?!?!
-
 	clearAgents(0);	// clear the existing agents from m_agents and m_b2world
 
 	// kill 50 agents (1/2 of agents)
@@ -618,7 +684,11 @@ void World::SelectFertileAgents()
 	//	std::cout << "agent " << i << ": " << m_fertileAgentsSelection[i]->getAgentBody() << std::endl;
 	//}
 
+	m_agentGenes.clear();	// clear the current generation of agents
+	
 	SelectAgentPartners();
+
+	CreateSurvivingAgents();				// spawn the agents that survived
 
 }
 
@@ -629,37 +699,44 @@ void World::SelectAgentPartners() 	// takes list of fertile agents selects pairs
 
 	GeneticAlgorithm* g = new GeneticAlgorithm();
 	
-	
-	//std::cout << "SAMPLE START: " << std::endl;
-	//int sampleSize = (int) NUM_AGENT_POP * CULL_PERCENTAGE;
+
+	//int sampleSize = (int) NUM_AGEN_POP * CULL_PERCENTAGE;
 	//int sampleSize = 50;
 	//for (int i = 0; i < NUM_AGENT_POP * CULL_PERCENTAGE; i++) {
 	int newAgents = 0;
 	generator.seed(time(0));	// set seed of generator
-	while (newAgents < NUM_AGENT_POP * CULL_PERCENTAGE) {
-		int offset = MateSelectionDistrobution(generator);
-		int index = (offset) * ((NUM_AGENT_POP / 10) * CULL_PERCENTAGE) + g->generateRandomInt(1, (NUM_AGENT_POP / 10)  * CULL_PERCENTAGE);
-		
-		int offset2 = MateSelectionDistrobution(generator);
-		int index2 = (offset2) * ((NUM_AGENT_POP / 10) * CULL_PERCENTAGE) + g->generateRandomInt(0, (NUM_AGENT_POP / 10)  * CULL_PERCENTAGE);
-
+	int num = (int)NUM_AGENT_POP * CULL_PERCENTAGE;
+	while (newAgents < num) {
+		int map1 = MateSelectionDistrobution(generator);
+		int offset = (int)((NUM_AGENT_POP / 10) * CULL_PERCENTAGE);	// calculate offset size
+		int index = (map1) * offset + g->generateRandomInt(1, offset);
+		int map2 = MateSelectionDistrobution(generator);
+		int index2 = (map2) * offset + g->generateRandomInt(0, offset);
 		//std::cout << "index1: " << index << std::endl;
 		//std::cout << "index2: " << index2 << std::endl;
 
 		if (index != index2) {	// check if the same agent has been choen twice
 			
-			// Bilateral crossover
-			//GeneticAlgorithm* newGenome = BilateralCrossoverAgent(m_fertileAgentsSelection[offset], m_fertileAgentsSelection[offset2]); // cross over two agents
-			// Arithmetic mean crossover
-			GeneticAlgorithm* newGenome = MeanCrossoverAgent(m_fertileAgentsSelection[offset], m_fertileAgentsSelection[offset2]); // cross over two agents
+			GeneticAlgorithm* newGenome;
+			if (g->generateRandomBool()) {
+				// Bilateral crossover
+				newGenome = BilateralCrossoverAgent(m_fertileAgentsSelection[map1], m_fertileAgentsSelection[map2]); // cross over two agents
+			}
+			else {
+				// Arithmetic mean crossover
+				newGenome = MeanCrossoverAgent(m_fertileAgentsSelection[map1], m_fertileAgentsSelection[map2]); // cross over two agents
+			}
 
+			//mutate genome
+			newGenome->SearchAgentChromes();	// scale muatation
+			//MutateAgent(newGenome);				// morphological mutation
+
+
+			newGenome->setID(++m_agentCount);
 			m_agentGenes.push_back(newGenome); // add genome to agent
-			//spawnAgent(newGenome, ++m_agentCount, 10, 10);	// spawn the new crossover agent
 			newAgents++;
 		}
 	}
-
-	CreateSurvivingAgents();				// spawn the agents that survived
 
 	// displays all fertile agents
 	//for (int i = 0; i < (NUM_AGENT_POP * CULL_PERCENTAGE); i++) {	// map culled agents to new array
@@ -668,9 +745,14 @@ void World::SelectAgentPartners() 	// takes list of fertile agents selects pairs
 
 }
 
+void World::MutateAgent(GeneticAlgorithm* newGenome)
+{
+	newGenome->MutateMorphologyJoin();
+}
+
 void World::CreateSurvivingAgents()
 {
-	for (int i = 0; i < NUM_AGENT_POP * CULL_PERCENTAGE; i++) {
+	for (int i = 0; i < (int)NUM_AGENT_POP * CULL_PERCENTAGE; i++) {
 		GeneticAlgorithm* GA = m_fertileAgentsSelection[i]->getGA();
 		//spawnAgent(GA, m_fertileAgentsSelection[i]->getID(), 10, 10);
 		m_agentGenes.push_back(GA);
@@ -722,8 +804,6 @@ GeneticAlgorithm* World::BilateralCrossoverAgent(Agent* a1, Agent* a2)
 	std::cout << "GENOME CROSSOVER END" << std::endl;
 	*/
 
-	newGenome->SearchAgentChromes(); // mutate random gene with mutation given mutation rate
-
 	return newGenome;		// return new genome
 
 
@@ -732,7 +812,6 @@ GeneticAlgorithm* World::BilateralCrossoverAgent(Agent* a1, Agent* a2)
 
 void World::EvolveAgents() 
 {
-	std::cout << "e0" << std::endl;
 	SelectFertileAgents();
 }
 
