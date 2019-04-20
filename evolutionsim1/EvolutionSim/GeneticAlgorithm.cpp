@@ -459,6 +459,8 @@ std::string GeneticAlgorithm::SplitChromes(std::string a1, std::string a2)
 {
 	std::string token;
 	std::string token2;
+	std::string token3;
+	std::string token4;
 	
 	std::istringstream stm(a1);	// split string to values
 	std::istringstream stm2(a2);	// split string to values
@@ -468,7 +470,6 @@ std::string GeneticAlgorithm::SplitChromes(std::string a1, std::string a2)
 	std::getline(stm2, token2, 'b'); 
 	std::string newChromesome = CreateCrossOverAgent(token, token2);
 	//std::cout << "\n========= First final ============" << std::endl;
-	//std::cout << newChromesome << std::endl;
 
 	//std::cout << "\n========= Second tree ============" << std::endl;
 	std::getline(stm, token, '\n');	// get rid of newline which both halfs have
@@ -478,16 +479,11 @@ std::string GeneticAlgorithm::SplitChromes(std::string a1, std::string a2)
 	std::getline(stm2, token2, 'b');
 
 	std::string newChromesome2 = CreateCrossOverAgent(token, token2);
-	//std::cout << "\n========= second final ============" << std::endl;
-	//std::cout << newChromesome2 << std::endl;
-
-	//combine strings
 	std::string fullChromesome = newChromesome + newChromesome2;
 
-	//std::cout << "full chromes start" << std::endl;
+	//std::cout << "\n========= Output Mean ============" << std::endl;
 	//std::cout << fullChromesome << std::endl;
-	//std::cout << "full chromes end" << std::endl;
-
+	//std::cout << "\n========= end ============" << std::endl;
 
 	reconstructAgentChromesomes(fullChromesome);	// reconstruct the chromes
 
@@ -497,17 +493,6 @@ std::string GeneticAlgorithm::SplitChromes(std::string a1, std::string a2)
 
 std::string GeneticAlgorithm::CreateCrossOverAgent(std::string a1, std::string a2)
 {
-	// split agents by b 
-	// add b to string
-	// while not empty
-		// output straiht to string if instruction
-		// get line
-		// split up line by ','
-		// find the mean of the two values and add to string
-
-	// add b to string
-	// repeat for lower half
-
 	std::string newChromesome;
 
 	std::string token;
@@ -522,35 +507,14 @@ std::string GeneticAlgorithm::CreateCrossOverAgent(std::string a1, std::string a
 	std::istringstream stm(a1);	// split string to values
 	std::istringstream stm2(a2);	// split string to values
 
-	//std::cout << "a\n";
-	//std::cout << a1 << std::endl;
-	//std::cout << "a2\n";
-	//std::cout << a2 << std::endl;
-
-	//std::getline(stm, token, '\n');
-	//std::getline(stm2, token2, '\n');	// get first token of second agent
 	while (std::getline(stm, token, '\n'))
 	{
 
 		std::getline(stm2, token2, '\n');	// get first token of second agent
 		if (token2 != "") {			//check if genome 1 is bigger than genome 2
-
-			// roll 1/2 for which agent structure is used
-			// token2 will copy the structure of agent 2
-			//if (token == "j" || token == "l") newChromesome += token + "\n";			// GOING WRONG HERE
 			newChromesome += token + "\n";
-			//std::cout << "1" << std::endl;
-			//std::cout << "token: " << token << std::endl;
-			//std::cout << "token2: " << token2 << std::endl;
-
 			std::getline(stm, token, '\n');
 			std::getline(stm2, token2, '\n');
-			//std::cout << "2" << std::endl;
-			//std::cout << "token: " << token << std::endl;
-			//std::cout << "token2: " << token2 << std::endl;
-
-
-			//std::cout << "\n" << std::endl;
 			for (int i = 0; i < token.length(); i++) {
 				if (token.at(i) != ',') {
 					var += token.at(i);
@@ -587,6 +551,142 @@ std::string GeneticAlgorithm::CreateCrossOverAgent(std::string a1, std::string a
 		}
 	}
 	newChromesome += "b\n";
+	return newChromesome;
+}
+
+
+std::string GeneticAlgorithm::SplitChromes2(std::string a1, std::string a2)
+{
+	std::string token;
+	std::string token2;
+
+	std::istringstream stm(a1);	// split string to values
+	std::istringstream stm2(a2);	// split string to values
+
+	//std::cout << "\n========= First tree ============" << std::endl;
+	std::getline(stm, token, 'b');
+	std::getline(stm2, token2, 'b');
+	std::string newChromesome = CreateUniformCrossover(token, token2);
+	//std::cout << "\n========= First final ============" << std::endl;
+
+	//std::cout << "\n========= Second tree ============" << std::endl;
+	std::getline(stm, token, '\n');	// get rid of newline which both halfs have
+	std::getline(stm2, token2, '\n');
+
+	std::getline(stm, token, 'b');
+	std::getline(stm2, token2, 'b');
+
+	std::string newChromesome2 = CreateUniformCrossover(token, token2);
+	std::string fullChromesome = newChromesome + newChromesome2;
+
+	//std::cout << "\n========= Output Uniform ============" << std::endl;
+	//std::cout << fullChromesome << std::endl;
+	//std::cout << "========= end ============" << std::endl;
+
+
+
+
+	reconstructAgentChromesomes(fullChromesome);	// reconstruct the chromes
+
+	return fullChromesome;
+
+}
+
+std::string GeneticAlgorithm::CreateUniformCrossover(std::string a1, std::string a2)
+{
+
+
+	std::string newChromesome;
+
+	std::string token;
+	std::string token2;
+
+	std::string var;
+	std::string var2;
+	int varCount = -1;
+
+	float mean = 0;
+
+	float value = 0;
+
+	std::istringstream stm(a1);	// split string to values
+	std::istringstream stm2(a2);	// split string to values
+
+	bool uniformArray[4];
+
+	while (std::getline(stm, token, '\n'))
+	{
+
+		std::getline(stm2, token2, '\n');	// get first token of second agent
+		if (token2 != "") {			//check if genome 1 is bigger than genome 2
+			newChromesome += "\n" + token + "\n";
+			std::getline(stm, token, '\n');
+			std::getline(stm2, token2, '\n');
+
+			for (int i = 0; i < 4; i++) {	// generate uniform array
+				uniformArray[i] = generateRandomBool();
+			}
+
+			for (int i = 0; i < token.length(); i++) {
+				if (token.at(i) != ',') {
+					var += token.at(i);
+					var2 += token2.at(i);
+				}
+				else {
+					//std::cout << var << std::endl;
+					//i++;	// ignore comma
+					varCount++;	// increment attribute type
+					switch (varCount)
+					{
+					case 0:
+						if (uniformArray[0]) { 
+							value = std::atof(var.c_str()); 
+						}
+						else {
+							value = std::atof(var2.c_str());
+						}
+
+						newChromesome += std::to_string(value) + ",";
+						break;	// break second switch
+					case 1:
+						if (uniformArray[1]) {
+							value = std::atof(var.c_str());
+						}
+						else {
+							value = std::atof(var2.c_str());
+						}
+
+						newChromesome += std::to_string(value) + ",";
+						break; // break second switch
+					case 2:
+						if (uniformArray[2]) {
+							value = std::atof(var.c_str());
+						}
+						else {
+							value = std::atof(var2.c_str());
+						}
+
+						newChromesome += std::to_string(value) + ",";
+						break; // break second switch
+					case 3:
+						if (uniformArray[3]) {
+							value = std::atof(var.c_str());
+						}
+						else {
+							value = std::atof(var2.c_str());
+						}
+
+						newChromesome += std::to_string(value) + ",";
+						varCount = -1;
+						break; // break second switch
+					}
+					var = "";
+					var2 = "";
+				}
+			}
+		}
+	}
+	newChromesome += "\nb";
 	return newChromesome;
 }
 
@@ -701,6 +801,7 @@ void GeneticAlgorithm::SearchAgentChromes()
 	}
 }
 
+// no longer used
 void GeneticAlgorithm::outputAgentChromes()
 {
 	std::cout << "_______________________" << std::endl;

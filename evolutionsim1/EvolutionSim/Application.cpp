@@ -62,7 +62,7 @@ void Application::gameLoop() {
 	bool epochNumber = 0;
 	bool skipAgent = false;
 	int doomedCount = 0;
-	bool initialPop = true;
+	bool initialPop = false;
 
 
 	// Implement Fixed Time Step

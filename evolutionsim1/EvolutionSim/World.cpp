@@ -145,6 +145,10 @@ void World::distrobutionCheck()
 {	// method to test distrobution of random variables
 	
 	std::cout << "l" << std::endl;
+	std::cout << "16.102411,0.397205,0.827890,11.628681" << std::endl;
+
+
+	std::cout << "l" << std::endl;
 	std::cout << "16.0334185,0.4182115,0.8255545,12.160624" << std::endl;
 	std::cout << "j" << std::endl;
 	std::cout << "16.0334185,0.4182115,0.8255545,12.160624" << std::endl;
@@ -717,14 +721,19 @@ void World::SelectAgentPartners() 	// takes list of fertile agents selects pairs
 
 		if (index != index2) {	// check if the same agent has been choen twice
 			
-			GeneticAlgorithm* newGenome;
-			if (g->generateRandomBool()) {
-				// Bilateral crossover
-				newGenome = BilateralCrossoverAgent(m_fertileAgentsSelection[map1], m_fertileAgentsSelection[map2]); // cross over two agents
-			}
-			else {
-				// Arithmetic mean crossover
-				newGenome = MeanCrossoverAgent(m_fertileAgentsSelection[map1], m_fertileAgentsSelection[map2]); // cross over two agents
+			GeneticAlgorithm* newGenome = nullptr;
+			int num = g->generateRandomInt(2, 3);
+			switch (num) 
+			{	
+				case 1: 
+					newGenome = BilateralCrossoverAgent(m_fertileAgentsSelection[map1], m_fertileAgentsSelection[map2]);	// bilateral crossover
+					break;
+				case 2: 
+					newGenome = MeanCrossoverAgent(m_fertileAgentsSelection[map1], m_fertileAgentsSelection[map2]); // arithmetic mean crossover
+					break;
+				case 3: 
+					newGenome = UniformCrossoverAgent(m_fertileAgentsSelection[map1], m_fertileAgentsSelection[map2]);	// uniform crossover
+					break;	
 			}
 
 			//mutate genome
@@ -759,11 +768,34 @@ void World::CreateSurvivingAgents()
 	}
 }
 
+GeneticAlgorithm* World::UniformCrossoverAgent(Agent* a1, Agent* a2)
+{
+	std::string a1Chrome = a1->getGA()->FlattenChrome();	// get string of chrome
+	std::string a2Chrome = a2->getGA()->FlattenChrome();
+
+	//std::cout << "--------- a1 -------------" << std::endl;
+	//std::cout << a1Chrome << std::endl;
+	//std::cout << "--------- a2 -------------" << std::endl;
+	//std::cout << a2Chrome << std::endl;
+	//std::cout << "--------- end -------------" << std::endl;
+
+	GeneticAlgorithm* GA = new GeneticAlgorithm();
+	GA->SplitChromes2(a1Chrome, a2Chrome);
+
+	return GA;
+}
+
 
 GeneticAlgorithm* World::MeanCrossoverAgent(Agent* a1, Agent* a2)
 {
 	std::string a1Chrome = a1->getGA()->FlattenChrome();	// get string of chrome
 	std::string a2Chrome = a2->getGA()->FlattenChrome();
+
+	//std::cout << "--------- a1 -------------" << std::endl;
+	//std::cout << a1Chrome << std::endl;
+	//std::cout << "--------- a2 -------------" << std::endl;
+	//std::cout << a2Chrome << std::endl;
+	//std::cout << "--------- end -------------" << std::endl;
 
 	GeneticAlgorithm* GA = new GeneticAlgorithm();
 	GA->SplitChromes(a1Chrome, a2Chrome);

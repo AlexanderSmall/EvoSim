@@ -126,7 +126,7 @@ struct AgentBuilder {
 		
 
 		for (auto&& sg : gm.lines) {
-			auto line = createLines(sg);
+			auto line = createLines(sg);	// recurrsive call
 			float startAngle = sg.angle;
 			line->SetTransform({ sg.length, 0.0 }, startAngle);
 

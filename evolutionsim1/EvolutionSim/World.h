@@ -102,6 +102,7 @@ public:
 	void CreateSurvivingAgents();
 	void MutateAgent(GeneticAlgorithm* newGenome);
 
+	GeneticAlgorithm* UniformCrossoverAgent(Agent* a1, Agent* a2);
 	GeneticAlgorithm* MeanCrossoverAgent(Agent* a1, Agent* a2);
 	GeneticAlgorithm* BilateralCrossoverAgent(Agent* a1, Agent* a2);
 

@@ -97,7 +97,7 @@ PrimitiveRenderer::addPolygon(
 )
 {
 	assert(numNewVertices != 0 && "Can't render an empty polygon!");
-	// Reserve the space before we do anything.
+	// Reserve the space before anything.
 	auto const totalVertices = m_vertices.size() + numNewVertices;
 	m_vertices.reserve(totalVertices);
 	auto const newPolygonCount = m_polygonSizes.size() + 1;
@@ -156,17 +156,12 @@ PrimitiveRenderer::addSegment(
 	m_vertices.emplace_back(end, colour);
 }
 
-void
-PrimitiveRenderer::bufferData()
+void PrimitiveRenderer::bufferData()
 {
 	glBindVertexArray(m_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glBufferData(
-		GL_ARRAY_BUFFER,
-		m_vertices.size() * sizeof(Vertex),
-		m_vertices.data(),
-		GL_DYNAMIC_DRAW
-	);
+	glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex),
+		m_vertices.data(), GL_DYNAMIC_DRAW);
 }
 
 

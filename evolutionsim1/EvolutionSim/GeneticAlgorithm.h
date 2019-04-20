@@ -110,6 +110,9 @@ public:
 
 	std::string SplitChromes(std::string a1, std::string a2);
 	std::string CreateCrossOverAgent(std::string a1, std::string a2);
+
+	std::string SplitChromes2(std::string a1, std::string a2);
+	std::string CreateUniformCrossover(std::string a1, std::string a2);
 	void resetStringChrome();
 
 	int getSymmetrySize() { return m_symmetrySize; }

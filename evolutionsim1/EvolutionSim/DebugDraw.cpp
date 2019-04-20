@@ -41,13 +41,8 @@ DebugDraw::DrawPolygon(
 	m_lineRenderer.addPolygon(pVertices, vertexCount, colour);
 }
 
-void
-DebugDraw::DrawSolidPolygon(
-	b2Vec2 const* pVertices,
-	int32 vertexCount,
-	b2Color const& colour
-)
-{
+void DebugDraw::DrawSolidPolygon(b2Vec2 const* pVertices, int32 vertexCount,
+								b2Color const& colour) {
 	b2Color fillColour{colour};
 	fillColour.a = m_fillAlpha;
 
